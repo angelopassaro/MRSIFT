@@ -21,6 +21,7 @@
 *.ear
 *.sar
 *.class
+.directory
 
 # Maven 
 target/
