@@ -10,7 +10,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <hadoop-version>2.7.4</hadoop-version>
-    <main-entry>it.unisa.soa.mrpnu.MRPNU</main-entry>
+    <main-entry>it.unisa.soa.mrsift.MRSIFT</main-entry>
   </properties>
   <dependencies>
     <dependency>
@@ -38,14 +38,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.openpnp</groupId>
+      <groupId>com.opencv</groupId>
       <artifactId>opencv</artifactId>
-      <version>3.2.0-1</version>
+      <version>3.4.1</version>
     </dependency>
-
   </dependencies>
   <build>
-    <finalName>MRPNU</finalName>
+    <finalName>MSIFT</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
