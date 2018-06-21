@@ -44,7 +44,7 @@
     </dependency>
   </dependencies>
   <build>
-    <finalName>MSIFT</finalName>
+    <finalName>MRSIFT</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
