@@ -10,7 +10,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <hadoop-version>2.7.4</hadoop-version>
-    <main-entry>it.unisa.soa.mrpnu.MRPNU</main-entry>
+    <main-entry>it.unisa.soa.mrsift.MRSIFT</main-entry>
   </properties>
   <dependencies>
     <dependency>
@@ -45,7 +45,7 @@
 
   </dependencies>
   <build>
-    <finalName>MRPNU</finalName>
+    <finalName>MRSIFT</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
