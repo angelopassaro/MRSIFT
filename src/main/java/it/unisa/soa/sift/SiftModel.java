@@ -17,13 +17,9 @@ public class SiftModel {
   private final Mat objetImage, sceneImage;
   private final MatOfKeyPoint objectKeypoints, sceneKeyPoints;
   private final MatOfKeyPoint objectDescriptors, sceneDescriptors;
-  private MatOfDMatch matches;
-  private final String objectPath;
-  private final String scenePath;
+  private final MatOfDMatch matches;
 
   public SiftModel(String objectPath, String scenePath){
-    this.objectPath = objectPath;
-    this.scenePath = scenePath;
     this.objetImage = Imgcodecs.imread(objectPath, SiftConfig.COLORED_IMAGE);
     this.sceneImage = Imgcodecs.imread(scenePath, SiftConfig.COLORED_IMAGE);
     this.objectKeypoints = new MatOfKeyPoint();
@@ -36,10 +32,6 @@ public class SiftModel {
 
   public MatOfDMatch getMatches() {
     return matches;
-  }
-
-  public void setMatches(MatOfDMatch matches) {
-    this.matches = matches;
   }
 
   public SIFT getSift() {
@@ -68,14 +60,6 @@ public class SiftModel {
 
   public MatOfKeyPoint getSceneDescriptors() {
     return sceneDescriptors;
-  }
-
-  public String getObjectPath() {
-    return objectPath;
-  }
-
-  public String getScenePath() {
-    return scenePath;
   }
   
 }

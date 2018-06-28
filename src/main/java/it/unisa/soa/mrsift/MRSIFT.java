@@ -28,27 +28,24 @@ public class MRSIFT {
 
   public static void main(String[] args) {
     load_library();
-    String firstImage = "/home/didacus/first.jpeg";
-    String secondImage = "/home/didacus/second.jpg";
+    String template = "/home/didacus/first.jpg";
     SiftManager algorithm = SiftManager.getInstance();
-    SiftModel sif = algorithm.findFeatures(firstImage, secondImage);
-    Mat out = algorithm.detectObject(sif, sif.getObjectKeypoints().toList(), sif.getSceneKeyPoints().toList());
-    Imgcodecs.imwrite("/home/didacus/result.jpg", out);
-   /* File file = new File("/home/didacus/db");
-    if(file.isDirectory()){
-      System.out.println("Directory");
+    String second = "/home/didacus/second.jpg";
+    SiftModel mo = algorithm.findFeatures(template, second);
+    Mat image =algorithm.detectObject(mo, mo.getObjectKeypoints().toList(), mo.getSceneKeyPoints().toList());
+    Imgcodecs.imwrite("/home/didacus/result.jpg", image);
+    /*File dir = new File("/home/didacus/db");
+    if(dir.isDirectory()){
+      System.out.println("Directory trovata");
     }
-    SiftManager algorithm = SiftManager.getInstance();
     List<String> paths = new ArrayList<>();
-    for(File i : file.listFiles()){
+    for(File i : dir.listFiles()){
       paths.add(i.getAbsolutePath());
     }
-    List<SiftModel> images = algorithm.findFeatures(firstImage, paths);
-    images.forEach(image -> {
-      Mat mat = algorithm.createImageMatches(image);
-      Imgcodecs.imwrite("/home/didacus/test/result"+res+".jpg", mat);
-      Mat hom = algorithm.findImage(image, image.getObjectKeypoints().toList(), image.getSceneKeyPoints().toList());
-      Imgcodecs.imwrite("/home/didacus/test/hom"+res+".jpg", hom);
+    List<SiftModel> models = algorithm.findFeatures(template, paths);
+    models.forEach(model -> {
+      Mat image = algorithm.detectObject(model, model.getObjectKeypoints().toList(), model.getSceneKeyPoints().toList());
+      Imgcodecs.imwrite("/home/didacus/test/result"+res+".jpg", image);
       res++;
     });*/
   }
