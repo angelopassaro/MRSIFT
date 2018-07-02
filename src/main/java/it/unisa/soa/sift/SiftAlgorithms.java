@@ -13,6 +13,10 @@ import org.opencv.core.Mat;
 public interface SiftAlgorithms {
   
   SiftModel findFeatures(String objectImagePath, String sceneImagePath);
+  
   List<SiftModel> findFeatures(String objectImagePath, List<String> scenesImagePath);
-  Mat detectObject(SiftModel siftObject, List<KeyPoint> objectPoints, List<KeyPoint> scenePoints);
+  
+  Mat detectObject(SiftModel model, List<KeyPoint> objectKeyPoints, List<KeyPoint> sceneKeyPoints);
+ 
+  
 }

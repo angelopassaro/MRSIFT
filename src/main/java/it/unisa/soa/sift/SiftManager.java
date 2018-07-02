@@ -1,6 +1,8 @@
 package it.unisa.soa.sift;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.opencv.calib3d.Calib3d;
@@ -14,10 +16,12 @@ import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.BFMatcher;
 import org.opencv.features2d.Features2d;
+import org.opencv.features2d.FlannBasedMatcher;
 import org.opencv.imgproc.Imgproc;
-
+import org.opencv.video.Video;
+import org.opencv.xfeatures2d.SIFT;
 /**
  *
  * @author didacus
@@ -36,10 +40,16 @@ public class SiftManager implements SiftAlgorithms {
 
   @Override
   public SiftModel findFeatures(String objectImagePath, String sceneImagePath) {
-    SiftModel siftObject = new SiftModel(objectImagePath, sceneImagePath);
-    this.extractFeatures(siftObject);
-    this.calculateMatches(siftObject);
-    return siftObject;
+    SiftModel model = new SiftModel(objectImagePath, sceneImagePath, SIFT.create());
+    model.getExtractor().detect(model.getObjectImage(), model.getObjectKeypoints());
+    model.getExtractor().detect(model.getSceneImage(), model.getSceneKeyPoints());
+    model.getExtractor().compute(model.getObjectImage(), model.getObjectKeypoints(), model.getObjectDescriptors());
+    model.getExtractor().compute(model.getSceneImage(), model.getSceneKeyPoints(), model.getSceneDescriptors());
+    BFMatcher flann = BFMatcher.create(Core.NORM_L2, true);
+    flann.match(model.getObjectDescriptors(), model.getSceneDescriptors(), model.getMatches());
+    List<DMatch> goodMatches = model.getMatches().toList().stream().sorted(Comparator.comparing(m -> m.distance)).collect(Collectors.toList());
+    model.getMatches().fromList(goodMatches.subList(0, goodMatches.size()/2));
+    return model;
   }
 
   @Override
@@ -48,62 +58,49 @@ public class SiftManager implements SiftAlgorithms {
   }
 
   @Override
-  public Mat detectObject(SiftModel siftObject, List<KeyPoint> objectPoints, List<KeyPoint> scenePoints) {
-    Mat outputImage = new Mat(siftObject.getSceneImage().rows(), siftObject.getSceneImage().cols() * 2, siftObject.getSceneImage().type());
-    Features2d.drawMatches(siftObject.getObjetImage(), siftObject.getObjectKeypoints(), siftObject.getSceneImage(),
-            siftObject.getSceneKeyPoints(), siftObject.getMatches(), outputImage, Scalar.all(-1), Scalar.all(-1),
+  public Mat detectObject(SiftModel model, List<KeyPoint> objectKeyPoints, List<KeyPoint> sceneKeyPoints) {
+    Mat outputImage = new Mat();
+    Features2d.drawMatches(model.getObjectImage(), model.getObjectKeypoints(), model.getSceneImage(), 
+            model.getSceneKeyPoints(), model.getMatches(), outputImage, Scalar.all(-1), Scalar.all(-1), 
             new MatOfByte(), Features2d.NOT_DRAW_SINGLE_POINTS);
-    /*List<DMatch> good = siftObject.getMatches().toList();
-    List<Point> oPointsList = good.stream().map(el -> objectPoints.get(el.queryIdx).pt).collect(Collectors.toList());
-    List<Point> sPointsList = good.stream().map(el -> scenePoints.get(el.trainIdx).pt).collect(Collectors.toList());
-    MatOfPoint2f objpoint2f = new MatOfPoint2f();
-    MatOfPoint2f scnpoint2f = new MatOfPoint2f();
-    objpoint2f.fromList(oPointsList);
-    scnpoint2f.fromList(sPointsList);
-    Mat homography = Calib3d.findHomography(objpoint2f, scnpoint2f, Calib3d.RANSAC, 3);
-    Mat obj_corners = new Mat(4, 1, CvType.CV_32FC2);
-    Mat scene_corners = new Mat(4, 1, CvType.CV_32FC2);
-    obj_corners.put(0, 0, new double[]{0, 0});
-    obj_corners.put(1, 0, new double[]{siftObject.getObjetImage().cols(), 0});
-    obj_corners.put(2, 0, new double[]{siftObject.getObjetImage().cols(), siftObject.getObjetImage().rows()});
-    obj_corners.put(3, 0, new double[]{0, siftObject.getObjetImage().rows()});
-    System.out.println("Transforming object corners to scene corners...");
-    Core.perspectiveTransform(obj_corners, scene_corners, homography);
-    int offset = siftObject.getObjetImage().cols();
-    Imgproc.line(outputImage,
-            new Point(scene_corners.get(0, 0)[0] + offset, scene_corners.get(0, 0)[1]),
-            new Point(scene_corners.get(1, 0)[0] + offset, scene_corners.get(1, 0)[1]), SiftConfig.RECT_SCALAR, 4);
-    Imgproc.line(outputImage,
-            new Point(scene_corners.get(1, 0)[0] + offset, scene_corners.get(1, 0)[1]),
-            new Point(scene_corners.get(2, 0)[0] + offset, scene_corners.get(2, 0)[1]), SiftConfig.RECT_SCALAR, 4);
-    Imgproc.line(outputImage,
-            new Point(scene_corners.get(2, 0)[0] + offset, scene_corners.get(2, 0)[1]),
-            new Point(scene_corners.get(3, 0)[0] + offset, scene_corners.get(3, 0)[1]), SiftConfig.RECT_SCALAR, 4);
-    Imgproc.line(outputImage,
-            new Point(scene_corners.get(3, 0)[0] + offset, scene_corners.get(3, 0)[1]),
-            new Point(scene_corners.get(0, 0)[0] + offset, scene_corners.get(0, 0)[1]), SiftConfig.RECT_SCALAR, 4);*/
+    /*************************homo***********************************/
+    MatOfPoint2f objectMatrix = new MatOfPoint2f();
+    MatOfPoint2f sceneMatrix = new MatOfPoint2f();
+    List<Point> objectPoints = new ArrayList<>();
+    List<Point> scenePoints = new ArrayList<>();
+    List<DMatch> goodMatches = model.getMatches().toList();
+    for(int i = 0; i < goodMatches.size(); i++){
+      objectPoints.add(objectKeyPoints.get(goodMatches.get(i).queryIdx).pt);
+      scenePoints.add(sceneKeyPoints.get(goodMatches.get(i).trainIdx).pt);
+    }
+    objectMatrix.fromList(objectPoints);
+    sceneMatrix.fromList(scenePoints);
+    Mat homography = Calib3d.findHomography(objectMatrix, sceneMatrix, Calib3d.RANSAC, 3);
+    if(homography.empty()){
+      System.err.println("Vuota");
+    }
+    Mat objectCorners = new Mat(4, 1, CvType.CV_32FC2);
+    objectCorners.put(0, 0, new double[]{0,0});
+    objectCorners.put(1, 0, new double[]{model.getObjectImage().cols(),0});
+    objectCorners.put(2, 0, new double[]{model.getObjectImage().cols(),model.getObjectImage().rows()});
+    objectCorners.put(3, 0, new double[]{0,model.getObjectImage().rows()});
+    int offset = model.getObjectImage().cols();
+    Mat sceneCorners = new Mat(4, 1, CvType.CV_32FC2);
+    Core.perspectiveTransform(objectCorners, sceneCorners, homography);
+    Imgproc.line(outputImage, 
+            new Point(sceneCorners.get(0, 0)[0]+offset, sceneCorners.get(0, 0)[1]), 
+            new Point(sceneCorners.get(1, 0)[0]+offset, sceneCorners.get(1, 0)[1]), SiftConfig.RECT_SCALAR, 4);
+    Imgproc.line(outputImage, 
+            new Point(sceneCorners.get(1, 0)[0]+offset, sceneCorners.get(1, 0)[1]), 
+            new Point(sceneCorners.get(2, 0)[0]+offset, sceneCorners.get(2, 0)[1]), SiftConfig.RECT_SCALAR, 4);
+    Imgproc.line(outputImage, 
+            new Point(sceneCorners.get(2, 0)[0]+offset, sceneCorners.get(2, 0)[1]), 
+            new Point(sceneCorners.get(3, 0)[0]+offset, sceneCorners.get(3, 0)[1]), SiftConfig.RECT_SCALAR, 4);
+    Imgproc.line(outputImage, 
+            new Point(sceneCorners.get(3, 0)[0]+offset, sceneCorners.get(3, 0)[1]), 
+            new Point(sceneCorners.get(0, 0)[0]+offset, sceneCorners.get(0, 0)[1]), SiftConfig.RECT_SCALAR, 4);
     return outputImage;
   }
 
-  private void extractFeatures(SiftModel siftObject) {
-    siftObject.getSift().detectAndCompute(siftObject.getObjetImage(), new Mat(), siftObject.getObjectKeypoints(), siftObject.getObjectDescriptors());
-    siftObject.getSift().detectAndCompute(siftObject.getSceneImage(), new Mat(), siftObject.getSceneKeyPoints(), siftObject.getSceneDescriptors());
-
-  }
-
-  private void calculateMatches(SiftModel siftObject) {
-    DescriptorMatcher matcher = DescriptorMatcher.create(SiftConfig.DESCRIPTOR_EXTRACTOR);
-    List<MatOfDMatch> list = new ArrayList<>();
-    matcher.knnMatch(siftObject.getObjectDescriptors(), siftObject.getSceneDescriptors(), list, 2);
-    List<DMatch> listOfGoodMatches = new ArrayList<>();
-    for (int i = 0; i < list.size(); i++) {
-      if (list.get(i).rows() > 1) {
-        DMatch[] matches = list.get(i).toArray();
-        if (matches[0].distance <= SiftConfig.OPTIMAL_THRESHOLD * matches[1].distance) {
-          listOfGoodMatches.add(matches[0]);
-        }
-      }
-    }
-    siftObject.getMatches().fromList(listOfGoodMatches);
-  }
+  
 }
