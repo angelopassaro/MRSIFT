@@ -1,6 +1,11 @@
 package it.unisa.soa.mrsift;
+import com.google.common.io.Files;
+import it.unisa.soa.sift.SiftManager;
+import it.unisa.soa.sift.SiftModel;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import org.opencv.xfeatures2d.SIFT;
 
 /**
  *
@@ -16,7 +21,7 @@ public class MRSIFT {
     System.load(opencv.getAbsolutePath());
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     load_library();
   }
 }

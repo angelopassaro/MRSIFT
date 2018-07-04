@@ -21,7 +21,7 @@ public class ImageFileReader extends RecordReader<Text, BytesWritable> {
 
   private FileSplit fileSplit;
   private Configuration conf;
-  private BytesWritable value = new BytesWritable();
+  private final BytesWritable value = new BytesWritable();
   private boolean processed = false;
   private Text filename;
 
@@ -71,4 +71,6 @@ public class ImageFileReader extends RecordReader<Text, BytesWritable> {
   public void close() throws IOException {
     //
   }
+
+  
 }

@@ -5,6 +5,8 @@ import java.util.List;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.features2d.Feature2D;
 
 /**
  *
@@ -14,8 +16,8 @@ import org.opencv.core.MatOfDMatch;
 public interface SiftAlgorithms {
   
  
-  void extractKeypoints(SiftModel model);
-  void extractDescriptors(SiftModel model);
-  MatOfDMatch calculateMatches(SiftModel objectModel, SiftModel sceneModel);
-  Mat detectObject(SiftModel objectModel, SiftModel sceneModel);
+  MatOfKeyPoint extractKeypoints(Mat image, Feature2D extractor);
+  MatOfKeyPoint extractDescriptors(Mat image, MatOfKeyPoint imageKeypoints, Feature2D extractor);
+  MatOfDMatch calculateMatches(MatOfKeyPoint objectDescriptors, MatOfKeyPoint sceneDescriptors);
+  Mat detectObject(Mat objectImage, Mat sceneImage, MatOfDMatch matches, MatOfKeyPoint objectKeyPoints, MatOfKeyPoint sceneKeyPoints);
 }
