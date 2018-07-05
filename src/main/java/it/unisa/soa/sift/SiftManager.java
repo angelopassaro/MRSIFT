@@ -1,6 +1,5 @@
 package it.unisa.soa.sift;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.opencv.calib3d.Calib3d;
