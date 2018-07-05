@@ -26,14 +26,14 @@ public class SiftMapper extends Mapper<Text, BytesWritable, Text, MapWritable> {
     MatOfKeyPoint objectKeyPoints = manager.extractKeypoints(mat, sift);
     MatOfKeyPoint objectDescriptors = manager.extractDescriptors(mat, objectKeyPoints, sift);
     MapWritable map = new MapWritable();
-    byte[] kbytes = new byte[objectKeyPoints.rows() * (int)objectKeyPoints.elemSize()];
-    objectKeyPoints.get(0, 0, kbytes);
-    byte[] dbytes = new byte[objectDescriptors.rows() * (int)objectDescriptors.elemSize()];
-    byte[] ibytes = new byte[(int)mat.total() * (int)mat.elemSize()];
-    mat.get(0, 0, ibytes);
-    map.put(new Text("objectKeypoint"), new BytesWritable(kbytes));
-    map.put(new Text("objectDescriptors"), new BytesWritable(dbytes));
-    map.put(new Text("objectImage"), new BytesWritable(ibytes));
+    byte[] keyPointsBytes = new byte[objectKeyPoints.rows() * (int)objectKeyPoints.elemSize()];
+    objectKeyPoints.get(0, 0, keyPointsBytes);
+    byte[] descriptorBytes = new byte[objectDescriptors.rows() * (int)objectDescriptors.elemSize()];
+    byte[] imageBytes = new byte[(int)mat.total() * (int)mat.elemSize()];
+    mat.get(0, 0, imageBytes);
+    map.put(new Text("objectKeypoint"), new BytesWritable(keyPointsBytes));
+    map.put(new Text("objectDescriptors"), new BytesWritable(descriptorBytes));
+    map.put(new Text("objectImage"), new BytesWritable(imageBytes));
     context.write(key, map);
   }
  
