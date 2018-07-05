@@ -6,6 +6,9 @@ import org.apache.hadoop.io.Text;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,42 +46,54 @@ public class SiftUtils {
         return outputImage;
     }
 
-    protected static Mat byteToMat (BytesWritable value) {
+    protected static Mat byteToMat(BytesWritable value) {
         byte[] bytes = value.getBytes();
         Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_GRAYSCALE);
         return mat;
 
     }
 
-    protected static byte[] matToByte(Mat value){
+    protected static byte[] matToByte(Mat value) {
 
-        int size = (int)value.total()*(int)value.elemSize();
+        int size = (int) value.total() * (int) value.elemSize();
         byte[] bytes = new byte[size];
 
-        System.arraycopy(value,0,bytes,0,size);  // possibile problema
+        System.arraycopy(value.dump().getBytes(), 0, bytes, 0, size);  // possibile problema  http://answers.opencv.org/question/33596/convert-mat-to-byte-in-c/
 
         return bytes;
+
+
+    //    BufferedImage empty = new BufferedImage(value.width(), value.height(), BufferedImage.TYPE_BYTE_GRAY);
+
+        // Get the BufferedImage's backing array and copy the pixels directly into it
+     //   byte[] data = ((DataBufferByte) empty.getRaster().getDataBuffer()).getData();
+    //    value.get(0, 0, data);
+
+    //    return data;
+
+
+
     }
 
 
-    protected static MapWritable createMapWritable (Mat objectKeyPoints, Mat objectDescriptors, Mat mat) {
+    protected static MapWritable createMapWritable(Mat objectKeyPoints, Mat objectDescriptors, Mat mat) {
         List<BytesWritable> bytesWritables = new ArrayList<>();
         MapWritable map = new MapWritable();
 
 
-        byte[] keyPointsBytes = new byte[objectKeyPoints.rows() * (int)objectKeyPoints.elemSize()];
+        byte[] keyPointsBytes = new byte[objectKeyPoints.rows() * (int) objectKeyPoints.elemSize()];
         objectKeyPoints.get(0, 0, keyPointsBytes);
-        byte[] descriptorBytes = new byte[objectDescriptors.rows() * (int)objectDescriptors.elemSize()];
-        byte[] imageBytes = new byte[(int)mat.total() * (int)mat.elemSize()];
+        byte[] descriptorBytes = new byte[objectDescriptors.rows() * (int) objectDescriptors.elemSize()];
+        byte[] imageBytes = new byte[(int) mat.total() * (int) mat.elemSize()];
         mat.get(0, 0, imageBytes);
 
         map.put(new Text("objectKeypoint"), new BytesWritable(keyPointsBytes));
         map.put(new Text("objectDescriptors"), new BytesWritable(descriptorBytes));
         map.put(new Text("objectImage"), new BytesWritable(imageBytes));
 
-       // bytesWritables.add(new BytesWritable(keyPointsBytes));
-       // bytesWritables.add(new BytesWritable(descriptorBytes));
-       // bytesWritables.add(new BytesWritable(imageBytes));
+        // bytesWritables.add(new BytesWritable(keyPointsBytes));
+        // bytesWritables.add(new BytesWritable(descriptorBytes));
+        // bytesWritables.add(new BytesWritable(imageBytes));
 
         return map;
 
