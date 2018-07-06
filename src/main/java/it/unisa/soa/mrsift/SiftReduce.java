@@ -44,11 +44,13 @@ public class SiftReduce extends Reducer<Text, MapWritable, NullWritable, NullWri
 
             SiftManager manager = SiftManager.getInstance();
 
-            FileSystem fs = FileSystem.get(URI.create(""), context.getConfiguration());
-//      FileStatus[] fileStatus = fs.listStatus(new Path(""));
-
-            Path pathName = new Path("");
-            RemoteIterator iterator = fs.listLocatedStatus(pathName);
+            FileSystem fs = FileSystem.get(context.getConfiguration());
+                       
+            
+            Path scenePath = Path.mergePaths(fs.getHomeDirectory(), new Path("/scenes"));
+            Path resPath = Path.mergePaths(fs.getHomeDirectory(), new Path("/result"));
+            
+            RemoteIterator iterator = fs.listLocatedStatus(scenePath);
             SIFT sift = SIFT.create();
 
             while (iterator.hasNext()) {
@@ -61,7 +63,8 @@ public class SiftReduce extends Reducer<Text, MapWritable, NullWritable, NullWri
                     MatOfDMatch matches = manager.calculateMatches(objectDescriptors, sceneDescriptors);
                     Mat outputImg = manager.detectObject(mat, sceneImg, matches, objectKeypoints, sceneKeyPoints);
 
-                    fs.create(lfs.getPath()).write(SiftUtils.matToByte(outputImg));
+                    fs.create(Path.mergePaths(resPath, new Path(lfs.getPath().getName())))
+                            .write(SiftUtils.matToByte(outputImg));
 
                 }
             }

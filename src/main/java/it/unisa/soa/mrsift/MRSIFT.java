@@ -2,6 +2,9 @@ package it.unisa.soa.mrsift;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
 
 /**
  *
@@ -15,9 +18,18 @@ public class MRSIFT {
     URL url = MRSIFT.class.getResource(OPENCV_LIB);
     File opencv = new File(url.getFile());
     System.load(opencv.getAbsolutePath());
+    
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
     load_library();
+    Configuration conf = new Configuration();
+    Job job = Job.getInstance(conf, "MRSIFT");
+    job.setJarByClass(MRSIFT.class);
+    job.setMapperClass(SiftMapper.class);
+    job.setCombinerClass(SiftReduce.class);
+    job.setInputFormatClass(ImageFileFormat.class);
+    ImageFileFormat.addInputPath(job, new Path(args[0]));
+    System.exit(job.waitForCompletion(true) ? 0 : 1);
   }
 }
