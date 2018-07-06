@@ -15,7 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  *
  * @author didacus
  */
-public class ImageFileFormat extends FileInputFormat<Text, BytesWritable> {
+public class ImageInputFormat extends FileInputFormat<Text, BytesWritable> {
 
   @Override
   protected boolean isSplitable(JobContext context, Path filename) {
