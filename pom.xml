@@ -10,7 +10,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <hadoop-version>2.7.4</hadoop-version>
-    <main-entry>it.unisa.soa.mrsift.MRSIFT</main-entry>
+    <main>it.unisa.soa.mrsift.MRSIFT</main>
   </properties>
   <dependencies>
     <dependency>
@@ -42,11 +42,6 @@
       <artifactId>opencv</artifactId>
       <version>3.4.1</version>
     </dependency>
-<dependency>
-    <groupId>com.google.code.gson</groupId>
-    <artifactId>gson</artifactId>
-    <version>2.8.5</version>
-</dependency>
   </dependencies>
   <build>
     <finalName>MRSIFT</finalName>
@@ -59,7 +54,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>${main-entry}</mainClass>
+              <mainClass>${main}</mainClass>
             </manifest>
           </archive>
         </configuration>

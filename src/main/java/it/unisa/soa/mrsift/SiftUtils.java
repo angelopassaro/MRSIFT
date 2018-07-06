@@ -77,7 +77,7 @@ public class SiftUtils {
 
 
     protected static MapWritable createMapWritable(Mat objectKeyPoints, Mat objectDescriptors, Mat mat) {
-        List<BytesWritable> bytesWritables = new ArrayList<>();
+//        List<BytesWritable> bytesWritables = new ArrayList<>();
         MapWritable map = new MapWritable();
 
 
