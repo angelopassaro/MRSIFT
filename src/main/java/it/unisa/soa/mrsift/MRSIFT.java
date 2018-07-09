@@ -25,6 +25,7 @@ public class MRSIFT {
     load_library();
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "MRSIFT");
+    job.addFileToClassPath(new Path("/usr/didacus/opencv-3.4.1.jar"));
     job.setJarByClass(MRSIFT.class);
     job.setMapperClass(SiftMapper.class);
     job.setCombinerClass(SiftReduce.class);
