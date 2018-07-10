@@ -25,7 +25,7 @@ public class MRSIFT {
     //load_library();
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "MRSIFT");
-    job.addCacheFile(MRSIFT.class.getResource(OPENCV_LIB).toURI());
+    job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
     job.setJarByClass(MRSIFT.class);
     job.setMapperClass(SiftMapper.class);
     job.setCombinerClass(SiftReduce.class);

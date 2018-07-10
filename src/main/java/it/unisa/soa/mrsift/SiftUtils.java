@@ -9,6 +9,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import org.opencv.core.MatOfKeyPoint;
 
 public class SiftUtils {
 
@@ -48,10 +49,10 @@ public class SiftUtils {
     return bytes;
   }
 
-  protected static MapWritable createMapWritable(Mat objectKeyPoints, Mat objectDescriptors, Mat mat) {
+  protected static MapWritable createMapWritable(MatOfKeyPoint objectKeyPoints, MatOfKeyPoint objectDescriptors, Mat mat) {
     MapWritable map = new MapWritable();
     byte[] keyPointsBytes = new byte[objectKeyPoints.rows() * (int) objectKeyPoints.elemSize()];
-    objectKeyPoints.get(0, 0, keyPointsBytes);
+    objectKeyPoints.get(0,0, keyPointsBytes);
     byte[] descriptorBytes = new byte[objectDescriptors.rows() * (int) objectDescriptors.elemSize()];
     byte[] imageBytes = new byte[(int) mat.total() * (int) mat.elemSize()];
     mat.get(0, 0, imageBytes);

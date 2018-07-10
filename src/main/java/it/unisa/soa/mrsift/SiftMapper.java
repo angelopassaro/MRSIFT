@@ -1,6 +1,7 @@
 package it.unisa.soa.mrsift;
 import it.unisa.soa.sift.SiftManager;
 import java.io.IOException;
+import java.io.File;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -18,8 +19,8 @@ public class SiftMapper extends Mapper<Text, BytesWritable, Text, MapWritable> {
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
     super.setup(context);
-    System.loadLibrary("libopencv_java341.so");
-  }
+   System.load(new File("libopencv_java341.so").getAbsolutePath());
+   }
 
   @Override
   protected void map(Text key,BytesWritable value, Context context) throws IOException, InterruptedException {

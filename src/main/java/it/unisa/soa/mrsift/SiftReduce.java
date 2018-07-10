@@ -3,6 +3,7 @@ package it.unisa.soa.mrsift;
 import it.unisa.soa.sift.SiftManager;
 
 import java.io.IOException;
+import java.io.File;
 import java.io.InputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -27,7 +28,7 @@ public class SiftReduce extends Reducer<Text, MapWritable, Text, BytesWritable> 
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
     super.setup(context);
-    System.loadLibrary("libopencv_java341.so");
+    System.load(new File("libopencv_java341.so").getAbsolutePath());
   }
 
   @Override
