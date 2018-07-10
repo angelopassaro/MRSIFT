@@ -24,12 +24,12 @@ public class SiftMapper extends Mapper<Text, BytesWritable, Text, MapWritable> {
 
   @Override
   protected void map(Text key,BytesWritable value, Context context) throws IOException, InterruptedException {
-    Mat mat = SiftUtils.byteToMat(value);
+   // Mat mat = SiftUtils.byteToMat(value);
     SIFT sift = SIFT.create();
     SiftManager manager = SiftManager.getInstance();
-    MatOfKeyPoint objectKeyPoints = manager.extractKeypoints(mat, sift);
-    MatOfKeyPoint objectDescriptors = manager.extractDescriptors(mat, objectKeyPoints, sift);
-    context.write(key, SiftUtils.createMapWritable(objectKeyPoints, objectDescriptors, mat));
+    //MatOfKeyPoint objectKeyPoints = manager.extractKeypoints(mat, sift);
+    //MatOfKeyPoint objectDescriptors = manager.extractDescriptors(mat, objectKeyPoints, sift);
+    //context.write(key, SiftUtils.createMapWritable(objectKeyPoints, objectDescriptors, mat));
   }
 
 }
