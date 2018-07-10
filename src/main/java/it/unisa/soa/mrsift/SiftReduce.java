@@ -25,6 +25,12 @@ import org.opencv.xfeatures2d.SIFT;
 public class SiftReduce extends Reducer<Text, MapWritable, Text, BytesWritable> {
 
   @Override
+  protected void setup(Context context) throws IOException, InterruptedException {
+    super.setup(context);
+    System.loadLibrary("libopencv_java341.so");
+  }
+
+  @Override
   protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
     for (MapWritable map : values) {
       byte[] rcvimg = ((BytesWritable) map.get(new Text("objectImage"))).getBytes();

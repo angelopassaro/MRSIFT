@@ -12,6 +12,12 @@
     <hadoop-version>2.7.4</hadoop-version>
     <main>it.unisa.soa.mrsift.MRSIFT</main>
   </properties>
+  <repositories>
+    <repository>
+      <id>project-repo</id>
+      <url>file://${basedir}/src/main/resources/libs</url>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -49,7 +55,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
+        <version>3.1.0</version>
         <configuration>
           <archive>
             <manifest>

@@ -57,3 +57,5 @@ pom.xml.releaseBackup
 pom.xml.tag
 /nbproject/
 !/src/main/resources/opencv-341.jar
+!/src/main/resources/libs/opencv-341.jar
+!/src/main/resources/libs/com/opencv/opencv/3.4.1/opencv-3.4.1.jar

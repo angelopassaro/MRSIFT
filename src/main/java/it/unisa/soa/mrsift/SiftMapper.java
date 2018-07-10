@@ -16,6 +16,12 @@ import org.opencv.xfeatures2d.SIFT;
 public class SiftMapper extends Mapper<Text, BytesWritable, Text, MapWritable> {
 
   @Override
+  protected void setup(Context context) throws IOException, InterruptedException {
+    super.setup(context);
+    System.loadLibrary("libopencv_java341.so");
+  }
+
+  @Override
   protected void map(Text key,BytesWritable value, Context context) throws IOException, InterruptedException {
     Mat mat = SiftUtils.byteToMat(value);
     SIFT sift = SIFT.create();
