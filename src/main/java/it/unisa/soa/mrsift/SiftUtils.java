@@ -39,9 +39,6 @@ public class SiftUtils {
   }
 
   protected static Mat byteToMat(byte[] value) {
-    return Imgcodecs.imdecode(new MatOfByte(value), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
-  }
-
 
         Mat mat = new Mat(269,187, CvType.CV_8UC1);
         Mat mat2 = new Mat(1,value.length, CvType.CV_8UC1 );
