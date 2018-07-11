@@ -14,6 +14,6 @@ public class MatImageOutputFormat extends FileOutputFormat<NullWritable, MatImag
 
     @Override
     public RecordWriter<NullWritable, MatImageWritable> getRecordWriter(TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
-        return new MatImageRecordWriter(taskAttemptContext);
+        return new MatImageRecordWriter();
     }
 }
