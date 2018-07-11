@@ -6,6 +6,8 @@ import java.net.URL;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
  *
@@ -30,10 +32,11 @@ public class MRSIFT {
     job.setMapperClass(SiftMapper.class);
     job.setCombinerClass(SiftReduce.class);
     job.setReducerClass(SiftReduce.class);
-    job.setInputFormatClass(ImageInputFormat.class);
-    job.setOutputFormatClass(ImageOutputFormat.class);
-    ImageOutputFormat.setOutputPath(job, new Path(args[1]));
-    ImageInputFormat.addInputPath(job, new Path(args[0]));
+    job.setInputFormatClass(MatImageInputFormat.class);
+    job.setOutputFormatClass(MatImageOutputFormat.class);
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+    FileInputFormat.addInputPath(job, new Path(args[0]));
     System.exit(job.waitForCompletion(true) ? 0 : 1);
+
   }
 }
