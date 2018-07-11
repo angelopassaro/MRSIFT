@@ -37,6 +37,5 @@ public class MRSIFT {
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     FileInputFormat.addInputPath(job, new Path(args[0]));
     System.exit(job.waitForCompletion(true) ? 0 : 1);
-
   }
 }

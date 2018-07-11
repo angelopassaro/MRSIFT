@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * Base class for MIPr image input formats
  */
-public abstract class MatImageInputFormat<NullWritable,MatImageWritable> extends FileInputFormat {
+public class MatImageInputFormat<NullWritable,MatImageWritable> extends FileInputFormat {
 
   /**
    *  Return false because image cannot be splitted

@@ -9,6 +9,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -21,7 +22,7 @@ import org.opencv.xfeatures2d.SIFT;
 /**
  * @author didacus
  */
-public class SiftReduce extends Reducer<NullWritable, MapWritable, NullWritable, MatImageWritable> {
+public class SiftReduce extends Reducer<LongWritable, MapWritable, LongWritable, MatImageWritable> {
 
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
@@ -30,7 +31,7 @@ public class SiftReduce extends Reducer<NullWritable, MapWritable, NullWritable,
   }
 
   @Override
-  protected void reduce(NullWritable key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
+  protected void reduce(LongWritable key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
     for (MapWritable map : values) {
       MatImageWritable rcvimg = ((MatImageWritable) map.get(new Text("objectImage")));
       MatImageWritable opoints = ((MatImageWritable) map.get(new Text("objectKeypoint")));
