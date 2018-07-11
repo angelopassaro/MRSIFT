@@ -59,3 +59,5 @@ pom.xml.tag
 !/src/main/resources/opencv-341.jar
 !/src/main/resources/libs/opencv-341.jar
 !/src/main/resources/libs/com/opencv/opencv/3.4.1/opencv-3.4.1.jar
+!/src/main/resources/libs/mipr/mipr-core/0.1/mipr-core-0.1.jar
+!/src/main/resources/libs/mipr/mipr-opencv/0.1/mipr-opencv-0.1.jar
