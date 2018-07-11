@@ -1,6 +1,5 @@
 package it.unisa.soa.mrsift;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -9,14 +8,11 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.imgproc.Imgproc;
 
 public class SiftUtils {
 
@@ -44,18 +40,18 @@ public class SiftUtils {
 
     protected static Mat byteToMat(byte[] value) {
 
-        Mat mat = new Mat(187,269, CvType.CV_8UC1);
-        /* Prova
-        convertire value
-        for(int c=0; c<value.length; c++) {
-        for(int i= 0; i < 187; i++) {
-            for (int j = 0; j < 269; j++) {
-                mat.put(i, j, value[c]);
+
+        Mat mat = new Mat(269,187, CvType.CV_8UC1);
+        Mat mat2 = new Mat(1,value.length, CvType.CV_8UC1 );
+        mat2.put(0,0,value);
+
+        int c = 0;
+
+            for(int i = 0; i < 269; i++) {
+                for (int j = 0; j < 187; j++) {
+                    mat.put(i, j, mat2.get(0,c++));
                 }
             }
-        }
-        */
-
 
         return mat;
     }
