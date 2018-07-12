@@ -1,23 +1,25 @@
 package it.unisa.soa.mrsift;
 
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.Text;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.opencv.core.CvType;
-import org.opencv.core.MatOfKeyPoint;
 
-
+/**
+ * 
+ * @author Diego Avella
+ * @author Angelo Passaro
+ * @author Antonio Addeo
+ */
 public class SiftUtils {
 
+  public static final String OBJ_IMG = "image";
+  public static final String OBJ_KPS = "keypoints";
+  public static final String OBJ_DSC = "descriptors";
+
   private static byte[] readStream(InputStream stream) throws IOException {
-    // Copy content of the image to byte-array
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     int nRead;
     byte[] data = new byte[16384];
@@ -31,49 +33,34 @@ public class SiftUtils {
     return temporaryImageInMemory;
   }
 
-  protected static Mat readInputStreamIntoMat(InputStream inputStream) throws IOException {
+  public static Mat readInputStreamIntoMat(InputStream inputStream) throws IOException {
     byte[] temporaryImageInMemory = readStream(inputStream);
     Mat outputImage = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory),
-            Imgcodecs.IMREAD_GRAYSCALE);
+            Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
     return outputImage;
   }
-
-  protected static Mat byteToMat(byte[] value) {
-
-        Mat mat = new Mat(269,187, CvType.CV_8UC1);
-        Mat mat2 = new Mat(1,value.length, CvType.CV_8UC1 );
-        mat2.put(0,0,value);
-
-        int c = 0;
-
-            for(int i = 0; i < 269; i++) {
-                for (int j = 0; j < 187; j++) {
-                    mat.put(i, j, mat2.get(0,c++));
-                }
-            }
-
-        return mat;
-    }
-
-
-    protected static byte[] matToByte(Mat value) {
-        int size =  value.channels() * (int)value.total();
-        byte[] bytes = new byte[size];
-        value.get(0, 0, bytes);
-        return bytes;
-
-    }
-
-    protected static MapWritable createMapWritable(MatOfKeyPoint objectKeyPoints, MatOfKeyPoint objectDescriptors, Mat mat) {
-        MapWritable map = new MapWritable();
-        byte[] keyPointsBytes = new byte[objectKeyPoints.rows() * (int) objectKeyPoints.elemSize()];
-        objectKeyPoints.get(0, 0, keyPointsBytes);
-        byte[] descriptorBytes = new byte[objectDescriptors.rows() * (int) objectDescriptors.elemSize()];
-        byte[] imageBytes = new byte[(int) mat.total() * (int) mat.elemSize()];
-        mat.get(0, 0, imageBytes);
-        map.put(new Text("objectKeypoint"), new BytesWritable(keyPointsBytes));
-        map.put(new Text("objectDescriptors"), new BytesWritable(descriptorBytes));
-        map.put(new Text("objectImage"), new BytesWritable(imageBytes));
-        return map;
-    }
+  
+  public static String extractFormat(String file){
+    int dotPos = file.lastIndexOf(".");
+      if (dotPos > -1) 
+        return file.substring(dotPos + 1);
+      else
+        return "jpg";
+  }
+  
+  public static byte[] matToByte(Mat image){
+    byte[] bytes = new byte[SiftUtils.totalSize(image)];
+    image.get(0, 0, bytes);
+    return bytes;
+  }
+  
+  public static Mat byteToMat(byte[] bytes, int width, int height, int type){
+    Mat image = new Mat(height, width, type);
+    image.put(0, 0, bytes);
+    return image;
+  }
+  
+  public static int totalSize(Mat image){
+    return Math.toIntExact(image.total()) * image.channels();
+  }
 }

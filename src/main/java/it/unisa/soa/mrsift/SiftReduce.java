@@ -9,9 +9,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.opencv.core.Mat;
@@ -22,7 +20,7 @@ import org.opencv.xfeatures2d.SIFT;
 /**
  * @author didacus
  */
-public class SiftReduce extends Reducer<LongWritable, MapWritable, LongWritable, MatImageWritable> {
+public class SiftReduce extends Reducer<Text, MapWritable, Text, MatWritable> {
 
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
@@ -31,15 +29,13 @@ public class SiftReduce extends Reducer<LongWritable, MapWritable, LongWritable,
   }
 
   @Override
-  protected void reduce(LongWritable key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
+  protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
     for (MapWritable map : values) {
-      MatImageWritable rcvimg = ((MatImageWritable) map.get(new Text("objectImage")));
-      MatImageWritable opoints = ((MatImageWritable) map.get(new Text("objectKeypoint")));
-      MatImageWritable odesc = ((MatImageWritable) map.get(new Text("objectDescriptors")));
-      MatOfKeyPoint objectDescriptors = new MatOfKeyPoint();
-      objectDescriptors.put(0, 0, odesc.getImage().dump().getBytes());
-      MatOfKeyPoint objectKeypoints = new MatOfKeyPoint();
-      objectKeypoints.put(0, 0, opoints.getImage().dump().getBytes());
+      MatWritable rcvimg = ((MatWritable) map.get(new Text(SiftUtils.OBJ_IMG)));
+      MatWritable opoints = ((MatWritable) map.get(new Text(SiftUtils.OBJ_KPS)));
+      MatWritable odesc = ((MatWritable) map.get(new Text(SiftUtils.OBJ_DSC)));
+      MatOfKeyPoint objectDescriptors = new MatOfKeyPoint(opoints.getImage());
+      MatOfKeyPoint objectKeypoints = new MatOfKeyPoint(odesc.getImage());
       SiftManager manager = SiftManager.getInstance();
       FileSystem fs = FileSystem.get(context.getConfiguration());
       Path scenePath = Path.mergePaths(fs.getHomeDirectory(), new Path("/scenes"));
@@ -47,6 +43,8 @@ public class SiftReduce extends Reducer<LongWritable, MapWritable, LongWritable,
       SIFT sift = SIFT.create();
       while (iterator.hasNext()) {
         LocatedFileStatus lfs = (LocatedFileStatus) iterator.next();
+        String format = SiftUtils.extractFormat(lfs.getPath().getName());
+        String name = lfs.getPath().getName();
         if (lfs.isFile()) {
           InputStream input = fs.open(lfs.getPath());
           Mat sceneImg = SiftUtils.readInputStreamIntoMat(input);
@@ -54,7 +52,7 @@ public class SiftReduce extends Reducer<LongWritable, MapWritable, LongWritable,
           MatOfKeyPoint sceneDescriptors = manager.extractDescriptors(sceneImg, sceneKeyPoints, sift);
           MatOfDMatch matches = manager.calculateMatches(objectDescriptors, sceneDescriptors);
           Mat outputImg = manager.detectObject(rcvimg.getImage(), sceneImg, matches, objectKeypoints, sceneKeyPoints);
-          context.write(key, new MatImageWritable(outputImg));
+          context.write(key, new MatWritable(outputImg, name, format));
         }
       }
     }
