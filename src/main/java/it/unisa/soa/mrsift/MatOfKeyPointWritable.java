@@ -9,6 +9,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import org.apache.hadoop.io.Writable;
+import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 
 /**
@@ -56,8 +57,7 @@ public class MatOfKeyPointWritable implements Writable{
         float[] floats = new float[size];
         for (int i=0; i<size; i++)
             floats[i] = di.readFloat();
-        this.mat = new MatOfKeyPoint();
-        this.mat.create(rows, cols, type);
+        this.mat = new MatOfKeyPoint(new Mat(rows,cols,type));
         this.mat.put(0, 0, floats);        
     }
     

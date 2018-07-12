@@ -3,6 +3,7 @@ package it.unisa.soa.mrsift;
 import it.unisa.soa.sift.SiftManager;
 import org.junit.Before;
 import org.junit.Test;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
@@ -58,6 +59,8 @@ public class TestManager {
         Mat det = sm.detectObject(obj,s,match,okp,skp);
 
         Imgcodecs.imwrite("/home/angelo/test/out.jpg", det);
+        System.out.println(CvType.typeToString(okd.type()));
+        System.out.println(CvType.typeToString(skd.type()));
 
 
     }

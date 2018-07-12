@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
@@ -34,6 +35,7 @@ public class MrsiftTest {
     Mat testMat = Imgcodecs.imread(testImagePath, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
     byte[] exb = SiftUtils.matToByte(testMat);
     Mat ac = new Mat(testMat.rows(), testMat.cols(), testMat.type());
+    CvType.typeToString(testMat.type());
     ac.put(0, 0, exb);
     Assert.assertEquals("It should return same dump", testMat.dump(), ac.dump());
   }
