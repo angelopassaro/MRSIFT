@@ -42,9 +42,8 @@ public class MatWritable implements Writable {
   public void write(DataOutput out) throws IOException {
     Text.writeString(out, this.format);
     Text.writeString(out, this.fileName);
-    out.writeInt((int) (this.image.total() * this.image.channels()));
-    byte[] byteArray = new byte[(int) (this.image.total() * this.image.channels())];
-    this.image.get(0, 0, byteArray);
+    out.writeInt(SiftUtils.totalSize(this.image));
+    byte[] byteArray = SiftUtils.matToByte(this.image);
     out.writeInt(this.image.width());
     out.writeInt(this.image.height());
     out.writeInt(this.image.type());
@@ -61,8 +60,7 @@ public class MatWritable implements Writable {
     int type = in.readInt();
     byte[] bArray = new byte[arraySize];
     in.readFully(bArray);
-    this.image = new Mat(mHeight, mWidth, type);
-    this.image.put(0, 0, bArray);
+    this.image = SiftUtils.byteToMat(bArray,mWidth,mHeight,type);
   }
 
   public Mat getImage() {
