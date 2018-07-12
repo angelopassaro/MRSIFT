@@ -34,12 +34,13 @@ public class MRSIFT {
     job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
     job.setJarByClass(MRSIFT.class);
     job.setMapperClass(SiftMapper.class);
-    job.setCombinerClass(SiftReduce.class);
     job.setReducerClass(SiftReduce.class);
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(MapWritable.class);
     job.setInputFormatClass(ImageInputFormat.class);
     job.setOutputFormatClass(ImageOutputFormat.class);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(MatWritable.class);
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     FileInputFormat.addInputPath(job, new Path(args[0]));
     System.exit(job.waitForCompletion(true) ? 0 : 1);

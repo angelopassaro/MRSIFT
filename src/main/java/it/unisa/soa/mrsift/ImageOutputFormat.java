@@ -16,6 +16,6 @@ public class ImageOutputFormat extends FileOutputFormat<Text, MatWritable> {
 
     @Override
     public RecordWriter<Text, MatWritable> getRecordWriter(TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
-        return new MatRecordWriter();
+        return new MatRecordWriter(taskAttemptContext);
     }
 }

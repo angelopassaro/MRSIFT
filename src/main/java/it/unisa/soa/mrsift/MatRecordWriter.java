@@ -22,11 +22,13 @@ import org.apache.hadoop.io.Text;
  */
 public class MatRecordWriter extends RecordWriter<Text, MatWritable> {
 
-  private TaskAttemptContext taskAttemptContext;
+  private final TaskAttemptContext taskAttemptContext;
 
-  public MatRecordWriter() {
-    super();
+  public MatRecordWriter(TaskAttemptContext taskAttemptContext) {
+    this.taskAttemptContext = taskAttemptContext;
   }
+  
+  
 
   @Override
   public void write(Text filename, MatWritable matImageWritable) throws IOException, InterruptedException {
