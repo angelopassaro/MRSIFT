@@ -52,7 +52,7 @@ public class SiftManager implements SiftAlgorithms {
   @Override
   public MatOfDMatch calculateMatches(MatOfKeyPoint objectDescriptors, MatOfKeyPoint sceneDescriptors) {
     MatOfDMatch matches = new MatOfDMatch();
-    BFMatcher matcher = BFMatcher.create(Core.NORM_L1, true);
+    BFMatcher matcher = BFMatcher.create(Core.NORM_L2, true);
     matcher.match(objectDescriptors, sceneDescriptors, matches);
     return matches;
   }

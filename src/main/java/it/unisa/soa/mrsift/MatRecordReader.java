@@ -42,7 +42,7 @@ public class MatRecordReader extends RecordReader<Text, MatWritable> {
       buffer.flush();
       temporaryImageInMemory = buffer.toByteArray();
     }
-    Mat out = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory), Imgcodecs.CV_LOAD_IMAGE_ANYCOLOR);
+    Mat out = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
     return new MatWritable(out);
   }
 
