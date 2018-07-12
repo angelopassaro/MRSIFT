@@ -28,8 +28,8 @@ public class SiftMapper extends Mapper<Text, MatWritable, Text, MapWritable> {
     MatOfKeyPoint objectDescriptors = manager.extractDescriptors(value.getImage(), objectKeyPoints, sift);
     MapWritable map = new MapWritable();
     map.put(new Text(SiftUtils.OBJ_IMG), value);
-    map.put(new Text(SiftUtils.OBJ_KPS), new MatWritable(objectKeyPoints));
-    map.put(new Text(SiftUtils.OBJ_DSC), new MatWritable(objectDescriptors));
+    map.put(new Text(SiftUtils.OBJ_KPS), new MatOfKeyPointWritable(objectKeyPoints));
+    map.put(new Text(SiftUtils.OBJ_DSC), new MatOfKeyPointWritable(objectDescriptors));
     context.write(key, map);
   }
 

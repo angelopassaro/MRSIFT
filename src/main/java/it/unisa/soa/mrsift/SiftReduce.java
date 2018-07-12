@@ -32,10 +32,10 @@ public class SiftReduce extends Reducer<Text, MapWritable, Text, MatWritable> {
   protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
     for (MapWritable map : values) {
       MatWritable rcvimg = ((MatWritable) map.get(new Text(SiftUtils.OBJ_IMG)));
-      MatWritable opoints = ((MatWritable) map.get(new Text(SiftUtils.OBJ_KPS)));
-      MatWritable odesc = ((MatWritable) map.get(new Text(SiftUtils.OBJ_DSC)));
-      MatOfKeyPoint objectDescriptors = new MatOfKeyPoint(opoints.getImage());
-      MatOfKeyPoint objectKeypoints = new MatOfKeyPoint(odesc.getImage());
+      MatOfKeyPointWritable opoints = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_KPS)));
+      MatOfKeyPointWritable odesc = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_DSC)));
+      MatOfKeyPoint objectDescriptors = opoints.getMat();
+      MatOfKeyPoint objectKeypoints = odesc.getMat();
       SiftManager manager = SiftManager.getInstance();
       FileSystem fs = FileSystem.get(context.getConfiguration());
       Path scenePath = Path.mergePaths(fs.getHomeDirectory(), new Path("/scenes"));
