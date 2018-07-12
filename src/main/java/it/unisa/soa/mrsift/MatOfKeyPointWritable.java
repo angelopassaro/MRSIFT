@@ -18,6 +18,14 @@ import org.opencv.core.MatOfKeyPoint;
 public class MatOfKeyPointWritable implements Writable{
     private MatOfKeyPoint mat;
 
+    public MatOfKeyPointWritable (){
+        this.mat = new MatOfKeyPoint();
+    }
+
+    public void setMat(MatOfKeyPoint mat) {
+        this.mat = mat;
+    }
+
     public MatOfKeyPoint getMat() {
         return mat;
     }
