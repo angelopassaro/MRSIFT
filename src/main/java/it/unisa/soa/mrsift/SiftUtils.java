@@ -36,7 +36,7 @@ public class SiftUtils {
   public static Mat readInputStreamIntoMat(InputStream inputStream) throws IOException {
     byte[] temporaryImageInMemory = readStream(inputStream);
     Mat outputImage = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory),
-            Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+            Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE);
     return outputImage;
   }
   

@@ -31,11 +31,11 @@ public class SiftReduce extends Reducer<Text, MapWritable, Text, MatWritable> {
   @Override
   protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
     for (MapWritable map : values) {
-      MatWritable rcvimg = ((MatWritable) map.get(new Text(SiftUtils.OBJ_IMG)));
-      MatOfKeyPointWritable opoints = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_KPS)));
-      MatOfKeyPointWritable odesc = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_DSC)));
-      MatOfKeyPoint objectDescriptors = opoints.getMat();
-      MatOfKeyPoint objectKeypoints = odesc.getMat();
+      MatWritable receivedImage = ((MatWritable) map.get(new Text(SiftUtils.OBJ_IMG)));
+      MatOfKeyPointWritable receivedKeyPoints = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_KPS)));
+      MatOfKeyPointWritable receivedObjectDescriptors = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_DSC)));
+      MatOfKeyPoint objectDescriptors = receivedObjectDescriptors.getMatOfKeyPoint();
+      MatOfKeyPoint objectKeypoints = receivedKeyPoints.getMatOfKeyPoint();
       SiftManager manager = SiftManager.getInstance();
       FileSystem fs = FileSystem.get(context.getConfiguration());
       Path scenePath = Path.mergePaths(fs.getHomeDirectory(), new Path("/scenes"));
@@ -51,7 +51,7 @@ public class SiftReduce extends Reducer<Text, MapWritable, Text, MatWritable> {
           MatOfKeyPoint sceneKeyPoints = manager.extractKeypoints(sceneImg, sift);
           MatOfKeyPoint sceneDescriptors = manager.extractDescriptors(sceneImg, sceneKeyPoints, sift);
           MatOfDMatch matches = manager.calculateMatches(objectDescriptors, sceneDescriptors);
-          Mat outputImg = manager.detectObject(rcvimg.getImage(), sceneImg, matches, objectKeypoints, sceneKeyPoints);
+          Mat outputImg = manager.detectObject(receivedImage.getImage(), sceneImg, matches, objectKeypoints, sceneKeyPoints);
           context.write(key, new MatWritable(outputImg, name, format));
         }
       }
