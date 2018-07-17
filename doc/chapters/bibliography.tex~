@@ -1,0 +1,8 @@
+\begin{thebibliography}{9}
+  \bibitem{cattaneo88}
+  G.Cattaneo, \textit{The basic Hardware \& software to medium grain parallelism}, 1988.
+  \bibitem{bugnon97}
+  E.Bugnion, S.Devine, K.Govil, M.Rosenblum, \\ \textit{Disco: Running Commodity Operating Systems on Scalable Multiprocessors}, 1997
+  \bibitem{patterson88}
+  D.Patterson, G.Gibson, K.H.Randy, \textit{A Case for Redundant Arrays of Inexpensive Disks (RAID)}, 1988.
+\end{thebibliography}

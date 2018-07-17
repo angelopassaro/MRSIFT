@@ -1,0 +1,9 @@
+\section{Descrizione del problema}
+Viene analizzato il problema
+\section{Versione Sequenziale}
+Descrizione della risoluzione del problema in ambiente shared memory.
+\section{Versione Distibuita con Hadoop}
+Descrizione della versione distribuita con Hadoop
+\section{Analisi delle prestazioni}
+%TODO fare weak scaling e strong scaling
+Vengono forniti i benchmark con rispettive spiegazioni

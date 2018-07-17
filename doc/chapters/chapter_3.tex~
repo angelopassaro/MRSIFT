@@ -1,0 +1,14 @@
+\section{Storia di Hadoop}
+Qui si introduce una breve storia di Hadoop
+\section{Architettura di Hadoop}
+qui si parla in breve dell'architettura di hadoop
+\subsection{HDFS}
+qui si parla di hdfs
+\subsection{YARN}
+qui si parla di yarn
+\section{Paradigma Map-Reduce}
+\subsection{Map}
+Qui si parla del metodo map
+\subsection{Reduce}
+qui si parla del metodo reduce
+\section{Come funziona un Job Map Reduce}
