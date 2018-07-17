@@ -1,0 +1,13 @@
+\section{Storia di Hadoop}
+Il framework Hadoop fu creato da \textbf{Doug Cutting}, creatore di \textbf{Apache Lucene}, la libreria più utilizzata per quanto riguarda la ricerca di tipo testuale. Questo framework fonda le sue radici da \textbf{Apache Nutch}, una motore di ricerca per il web open source a sua volta parte integrante del progetto Lucene. Scrivere un intero motore di ricerca da zero era un obiettivo molto ambizioso. Il progetto Nutch partì nel 2002 ed ebbe un buon successo tuttavia i creatori si resero immediatamente conto che la loro architettura non sarebbe stata in grado di scalare a sufficienza a causa dell'alto numero di pagine web da indicizzare (già allora ce ne erano più di un miliardo). Nel 2003 Google pubblicava il paper in cui introduceva il GFS e Nutch intuì che questo filesystem avrebbe risolto i problemi di memorizzazione e amministrazione dei dati cheavevano e decisero di implementarne una versione open source che venne chiamata NDFS (Nutch Distributed File System). Un anno dopo smepre Google pubblicò il paper che introdusse il paradigma Map-Reduce e ancora una volta il creatore capì che questa idea lo avrebbe aiutato a risolvere i problemi di Apache Nutch e nel 2005 il suo team aveva già implementato una sua versione open source e nel giro di 6 mesi tutti gli algoritmi del motore di ricerca furono adattati per essere eseguiti su NDFS e usando Map-Reduce. Questa "accoppiata" ebbe così tanto successo che nel Febbraio 2006 Nutch decise di spostarlo in un progetto indipendente chiamato Hadoop e nello stesso periodo Doug Cutting si unì a Yahoo! che forni un team dedicato e risorse finanziarie che trasformare Hadoop in un sistema che potesse essere eseguito per scalare anche sul web e ci riuscirono nel 2008 quando l'azienda annunciò che il suo indice di ricerca era stato generato da un cluster Hadopo da 10000 core. Nel Gennaio 2008 Hadoop divenne il progetto di punta della fondazione Apache ed è tuttora utilizzato da grandi compagnie come Facebook, New York Times e finnziato dai big dell'informatica come IBM, Microsoft e dalla stessa Google.
+\section{Architettura di Hadoop}
+qui si parla in breve dell'architettura di hadoop
+\subsection{HDFS}
+HDFS è il filesystem distribuito che utilizza il framework Hadoop per processare i dati
+qui si parla di yarn
+\section{Paradigma Map-Reduce}
+\subsection{Map}
+Qui si parla del metodo map
+\subsection{Reduce}
+qui si parla del metodo reduce
+\section{Come funziona un Job Map Reduce}
