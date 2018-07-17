@@ -36,30 +36,16 @@ public class MRSIFT extends Configured implements Tool {
     @Override
     public int run(String[] strings) throws Exception {
         Configuration conf = this.getConf();
-        Job job = null;
-    /*
-    Job job = Job.getInstance(conf, "MRSIFT");
-    job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
-    job.setJarByClass(MRSIFT.class);
-    job.setMapperClass(SiftMapper.class);
-    job.setReducerClass(SiftReduce.class);
-    job.setMapOutputKeyClass(Text.class);
-    job.setMapOutputValueClass(MapWritable.class);
-    job.setInputFormatClass(ImageInputFormat.class);
-    job.setOutputFormatClass(ImageOutputFormat.class);
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(MatWritable.class);
-    ImageOutputFormat.setOutputPath(job, new Path(strings[1]));
-    ImageInputFormat.addInputPath(job, new Path(strings[0]));
-
-    */
-        if (strings[2].equals("C")) {
-            job = JobFactory.createSequentJob(strings, conf);
-        } else if (strings[2].equals("N")) {
-            job = JobFactory.createaMainJob(strings, conf);
-
-        } else {
-            job = JobFactory.createSequent(strings, conf);
+        Job job;
+        switch(strings[2]){
+          case "--images":
+            job = JobFactory.jobWithImages(strings, conf);
+            break;
+          case "--combine":
+            job = JobFactory.jobWithSequenceWriter(strings, conf);
+            break;
+          default:
+            job = JobFactory.jobWithSequenceReader(strings, conf);
         }
         return job.waitForCompletion(true) ? 0 : 1;
     }
