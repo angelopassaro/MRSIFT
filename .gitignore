@@ -25,7 +25,6 @@
 *.toc
 *.log
 *.fls
-*.tex~
 *.fdb_latexmk
 .directory
 
