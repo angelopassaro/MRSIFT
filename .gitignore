@@ -21,6 +21,12 @@
 *.ear
 *.sar
 *.class
+*.aux
+*.toc
+*.log
+*.fls
+*.tex~
+*.fdb_latexmk
 .directory
 
 # Maven 
