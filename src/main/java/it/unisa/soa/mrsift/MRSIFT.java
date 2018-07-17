@@ -20,7 +20,7 @@ import org.apache.hadoop.util.ToolRunner;
  */
 public class MRSIFT extends Configured implements Tool {
 
-  private static final String OPENCV_LIB = "/libs/libopencv_java341.so";
+  public static final String OPENCV_LIB = "/libs/libopencv_java341.so";
 
   public static void load_library() {
     URL url = MRSIFT.class.getResource(OPENCV_LIB);
@@ -36,6 +36,8 @@ public class MRSIFT extends Configured implements Tool {
   @Override
   public int run(String[] strings) throws Exception {
     Configuration conf = this.getConf();
+    Job job = null;
+    /*
     Job job = Job.getInstance(conf, "MRSIFT");
     job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
     job.setJarByClass(MRSIFT.class);
@@ -49,6 +51,13 @@ public class MRSIFT extends Configured implements Tool {
     job.setOutputValueClass(MatWritable.class);
     ImageOutputFormat.setOutputPath(job, new Path(strings[1]));
     ImageInputFormat.addInputPath(job, new Path(strings[0]));
-    return job.waitForCompletion(true) ? 0 : 1;
+
+    */
+    if (strings[2].equals("C")) {
+        job = JobFactory.createSequentJob(strings, conf);
+    } else {
+        job = JobFactory.createaMainJob(strings,conf);
+    }
+      return job.waitForCompletion(true) ? 0 : 1;
   }
 }
