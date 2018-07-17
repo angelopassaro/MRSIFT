@@ -2,6 +2,7 @@ package it.unisa.soa.mrsift;
 
 import java.io.File;
 import java.net.URL;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -12,7 +13,6 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- *
  * @author Diego Avella
  * @author Angelo Passaro
  * @author Antonio Addeo This class is the main M/R Job configuration
@@ -20,23 +20,23 @@ import org.apache.hadoop.util.ToolRunner;
  */
 public class MRSIFT extends Configured implements Tool {
 
-  public static final String OPENCV_LIB = "/libs/libopencv_java341.so";
+    public static final String OPENCV_LIB = "/libs/libopencv_java341.so";
 
-  public static void load_library() {
-    URL url = MRSIFT.class.getResource(OPENCV_LIB);
-    File opencv = new File(url.getFile());
-    System.load(opencv.getAbsolutePath());
-  }
+    public static void load_library() {
+        URL url = MRSIFT.class.getResource(OPENCV_LIB);
+        File opencv = new File(url.getFile());
+        System.load(opencv.getAbsolutePath());
+    }
 
-  public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new Configuration(), new MRSIFT(), args);
-    System.exit(res);
-  }
+    public static void main(String[] args) throws Exception {
+        int res = ToolRunner.run(new Configuration(), new MRSIFT(), args);
+        System.exit(res);
+    }
 
-  @Override
-  public int run(String[] strings) throws Exception {
-    Configuration conf = this.getConf();
-    Job job = null;
+    @Override
+    public int run(String[] strings) throws Exception {
+        Configuration conf = this.getConf();
+        Job job = null;
     /*
     Job job = Job.getInstance(conf, "MRSIFT");
     job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
@@ -53,11 +53,14 @@ public class MRSIFT extends Configured implements Tool {
     ImageInputFormat.addInputPath(job, new Path(strings[0]));
 
     */
-    if (strings[2].equals("C")) {
-        job = JobFactory.createSequentJob(strings, conf);
-    } else {
-        job = JobFactory.createaMainJob(strings,conf);
+        if (strings[2].equals("C")) {
+            job = JobFactory.createSequentJob(strings, conf);
+        } else if (strings[2].equals("N")) {
+            job = JobFactory.createaMainJob(strings, conf);
+
+        } else {
+            job = JobFactory.createSequent(strings, conf);
+        }
+        return job.waitForCompletion(true) ? 0 : 1;
     }
-      return job.waitForCompletion(true) ? 0 : 1;
-  }
 }
