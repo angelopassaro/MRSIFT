@@ -33,7 +33,8 @@ public class TestManager {
 
     @Before
     public void setUp(){
-        MRSIFT.load_library();
+
+        //MRSIFT.load_library();
     }
 
 

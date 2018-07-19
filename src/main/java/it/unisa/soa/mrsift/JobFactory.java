@@ -11,9 +11,7 @@ import static it.unisa.soa.mrsift.MRSIFT.OPENCV_LIB;
 
 public class JobFactory {
 
-  public static Job jobWithImages(String[] strings, Configuration conf) throws Exception {
-    Job job = Job.getInstance(conf, "MRSIFT");
-    job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
+  public static Job jobWithImages(String[] strings, Job job) throws Exception {
     job.setJarByClass(MRSIFT.class);
     job.setMapperClass(SiftMapper.class);
     job.setReducerClass(SiftReduce.class);
@@ -28,9 +26,7 @@ public class JobFactory {
     return job;
   }
 
-  public static Job jobWithSequenceWriter(String[] strings, Configuration conf) throws Exception {
-    Job job = Job.getInstance(conf, "MRSIFT");
-    job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
+  public static Job jobWithSequenceWriter(String[] strings, Job job) throws Exception {
     job.setJarByClass(MRSIFT.class);
     job.setMapperClass(ImageSequentMapper.class);
     job.setMapOutputKeyClass(Text.class);
@@ -45,9 +41,7 @@ public class JobFactory {
     return job;
   }
 
-  public static Job jobWithSequenceReader(String[] strings, Configuration conf) throws Exception {
-    Job job = Job.getInstance(conf, "MRSIFT");
-    job.addFileToClassPath(new Path(MRSIFT.class.getResource(OPENCV_LIB).toURI()));
+  public static Job jobWithSequenceReader(String[] strings, Job job) throws Exception {
     job.setJarByClass(MRSIFT.class);
     job.setMapperClass(SiftMapper.class);
     job.setReducerClass(SiftReduce.class);

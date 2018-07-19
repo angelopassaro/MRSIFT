@@ -26,7 +26,7 @@ public class MrsiftTest {
   
   @Before
   public void setUp(){
-    MRSIFT.load_library();
+    //MRSIFT.load_library();
   }
 
 
