@@ -12,7 +12,7 @@ Il passaggio dalla versione 1 alla versione 2 del framework ha portato enormi ca
 \end{description}
 \begin{figure}
   \begin{center}
-    \includegraphics[width=\linewidth]{architecture.png}
+    \includegraphics[width=\linewidth]{architecture.jpg}
     \caption{Architettura}
     \label{fig:architecture}
   \end{center}
@@ -74,7 +74,7 @@ L'intero processo comprende, da una vista ad alto livello, cinque entità indipe
 \end{enumerate}
 \begin{figure}
   \begin{center}
-    \includegraphics[width=\linewidth]{mapReduceJob.jpg}
+    \includegraphics[width=\linewidth]{mapReduceJob.png}
     \caption{L'esecuzione di un job MapReduce di Hadoop}
     \label{fig:job}
   \end{center}
@@ -99,7 +99,6 @@ Lo shuffle è un'area del codebase dove raffinamenti e miglioramenti sono contin
 \subsubsection{Il lato Map}
 Quando la funzione map comincia a produrre output, non è semplicemente scritto su disco. Il processo è più complesso, e prende vantaggi dalla bufferizzazione delle scritture in memoria ed fa quale preordinamento per ragioni di efficienza. \\
 Ogni map task ha un buffer di memoria circolare su cui scrive l'output. Quando i contenuti del buffer raggiungono un certo limite di taglia, un thread in background comincerà a SPILL scrivere i contenuti su disco. I map output continueranno a essere scritti sul buffer fino a quando la scrittura
-
 
 
 
