@@ -1,4 +1,4 @@
-In questa capitolo si descriverà il problema affrontato per poi passare alle versioni sequenziale e distribuita della soluzione, e infine si discuterà delle prestazioni delle due versioni.
+In questa capitolo si descriverà il problema affrontato per poi passare alle versioni sequenziale e distribuita della soluzione (è possibile trovare le due versioni sulla piattaforma di versioning GitHub al seguente link \\ https://github.com/angelopassaro/MRSIFT), e infine si discuterà delle prestazioni delle due versioni.
 \newline
 \section{Descrizione del problema}
 
@@ -6,7 +6,7 @@ Il problema affrontato in questo studio riguarda l' applicazione dell'algoritmo 
 Per ogni oggetto in un'immagine, ci sono molte features, che sono caratteristiche interessanti dell'oggetto, le quali possono essere estratte in modo da fornire una descrizione "caratteristica" dell'oggetto. Questa descrizione estratta da una immagine campione può poi essere utilizzata per identificare l'oggetto durante il tentativo di individuare l'oggetto in una immagine contenente più oggetti. Per poter recuperare queste features esistono diversi algoritmi quali per esempio SURF(Speeded Up Robust Features), ORB (Oriented FAST and Rotated BRIEF) e SIFT in questo studio ci siamo concentrati su quest'ultimo il quale è un algoritmo cpu-intensive e quindi ci interessava analizzare il suo comportamento in un ambiente distribuito.
 
 \subsection{SIFT}
-Scale-invariant feature transform (SIFT) è un algoritmo utilizzato in computer vision che permette di rilevare e descrivere caratteristiche pubblicato da David G. Lowe\site{lowe04} nel 2004.
+Scale-invariant feature transform (SIFT) è un algoritmo utilizzato in computer vision che permette di rilevare e descrivere caratteristiche pubblicato da David G. Lowe\cite{lowe04} nel 2004.
 L'algoritmo consiste in un metodo in grado di estrarre delle caratteristiche distintive invarianti da un immagine che possono essere utilizzate per effettuare un matching tra diversi oggetti. Le caratteristiche sono invarianti rispetto alla scala e alla rotazione dell'immagine e sono mostrate per fornire una robusta corrispondenza su una vasta gamma di distorsioni affini, cambiamenti nel punto di vista 3D, aggiunta di rumore e cambiamento nell'illuminazione. L'algoritmo esegue cinque step:
 \begin{itemize}
 \item \textbf{Scale-space Extrema Detection}
@@ -30,7 +30,7 @@ Una volta trovato DoG vengono cercati i keypoints che rappresentano meglio l'imm
     	\end{center}
 \end{figure}
 
-%Il paper fornisce alcuni dati ottimali e sono: numero di ottave = 4, livelli di scala = 5 valore iniziale $\sigma$ = 1.6 e k = 2-$\sqrt$.
+Il paper fornisce alcuni dati ottimali e sono: numero di ottave = 4, livelli di scala = 5 valore iniziale $\sigma$ = 1.6 e k = $\sqrt{2}$.
 
 \item \textbf{Keypoint Localization}
 
@@ -47,7 +47,7 @@ In questa fase viene creato un descrittore di keypoint. Viene preso un intorno 1
 
 \item \textbf{Keypoint Matching}
 
-I keypoints tra due immagini sono abbinati identificando i loro vicini più vicini. Ma in alcuni casi, la seconda corrispondenza più vicina potrebbe essere molto vicina alla prima. Questo può accadere a causa di rumore o per altri motivi. In questi casi, viene preso il rapporto tra distanza più vicina e distanza più vicina al secondo. Se è maggiore di 0.8, vengono rifiutati. In questo modo si riesco a elimianre circa il 90\% di false corrispondenze mentre scarta solo il 5\% corrispondenze corrette.
+I keypoints tra due immagini sono abbinati identificando i loro vicini più vicini. Ma in alcuni casi, la seconda corrispondenza più vicina potrebbe essere molto vicina alla prima. Questo può accadere a causa di rumore o per altri motivi. In questi casi, viene preso il rapporto tra distanza più vicina e distanza più vicina al secondo. Se è maggiore di 0.8, vengono rifiutati. In questo modo si riesco a eliminare circa il 90\% di false corrispondenze mentre scarta solo il 5\% corrispondenze corrette.
 	
 
 
@@ -62,15 +62,80 @@ Per l'implementazione dell' object detection è stato utilizzato OpenCV. OpenCV 
 \noindent OpenCV supporta diversi linguaggi C++, Python, Java e MATLAB e i pricipali sistemi operativi Linux, Windows Mac os, e Android.
 
 \section{Versione Sequenziale}
-La versione sequenziale prevede l'individuazione di un unico oggetto(query) all'interno di una o più scene(train). Prima estrae le caratteristiche grazie all'algoritmo SIFT dall'immagine query e dall'immagine di train, successivamente viene effettuato il match tra le due immagini utilizzando l'algoritmo di Brute Force fornito da OpenCV, e infine viene disegnata l'omografia in caso di match positivo.
-
-
-
+Il core della versione sequenziale è il \emph{\textit{SiftManager}}. L'algoritmo prevede l'individuazione di un unico oggetto(query) all'interno di una o più scene(train). Il nostro algoritmo esegue tre step:
+\begin{itemize}
+\item \textbf{Fase Uno :}\\
+Vengono estratte le caratteristiche grazie all'algoritmo SIFT dall'immagine query e dall'immagine di train.
+Prima vengono estratti i keypoints attraverso \emph{\textit{extractKeypoints}} e successivamente i descrittori con \emph{\textit{extractDescriptors}}
 \begin{lstlisting}
+ @Override
+  public MatOfKeyPoint extractKeypoints(Mat image, Feature2D extractor) {
+    MatOfKeyPoint imageKeyPoints = new MatOfKeyPoint();
+    extractor.detect(image, imageKeyPoints);
+    return imageKeyPoints;
+  }
 
+  @Override
+  public MatOfKeyPoint extractDescriptors(Mat image, MatOfKeyPoint imageKeypoints, Feature2D extractor) {
+    MatOfKeyPoint imageDescriptors = new MatOfKeyPoint();
+    extractor.compute(image, imageKeypoints, imageDescriptors);
+    return imageDescriptors;
+  }
 \end{lstlisting}
+\item \textbf{Fase Due :}\\
+Viene effettuato il match tra le immagini query e train utilizzando l'algoritmo di Brute Force basato sulla distanza Euclidea e utilizzando il crosscheck, che permette di ritornare una coppia di punti (i,j) che risulta essere la più vicina nel matcher.
+\begin{lstlisting}
+  @Override
+  public MatOfDMatch calculateMatches(MatOfKeyPoint objectDescriptors, MatOfKeyPoint sceneDescriptors) {
+    MatOfDMatch matches = new MatOfDMatch();
+    BFMatcher matcher = BFMatcher.create(Core.NORM_L2, true);
+    matcher.match(objectDescriptors, sceneDescriptors, matches);
+    return matches;
+  }
+\end{lstlisting}
+\item \textbf{Fase Tre :}\\
+Viene rilevato l'oggetto e in caso di esito positivo viene disegnata l'omografia intorno all'oggetto.
+\begin{lstlisting}
+  @Override
+  public Mat detectObject(Mat objectImage, Mat sceneImage, MatOfDMatch matches, MatOfKeyPoint objectKeyPoints, MatOfKeyPoint sceneKeyPoints) {
+    Mat output = new Mat();
+    Features2d.drawMatches(objectImage, objectKeyPoints, sceneImage, sceneKeyPoints, 
+            matches, output, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.NOT_DRAW_SINGLE_POINTS);
+    List<KeyPoint> objkeys = objectKeyPoints.toList();
+    List<KeyPoint> scnkeys = sceneKeyPoints.toList();
+    List<DMatch> goodMatches = matches.toList();
+    List<Point> oPoints = goodMatches.stream().map(m -> objkeys.get(m.queryIdx).pt).collect(Collectors.toList());
+    List<Point> sPoints = goodMatches.stream().map(m -> scnkeys.get(m.trainIdx).pt).collect(Collectors.toList());
+    MatOfPoint2f objectMatrix = new MatOfPoint2f();
+    MatOfPoint2f sceneMatrix = new MatOfPoint2f();
+    objectMatrix.fromList(oPoints);
+    sceneMatrix.fromList(sPoints);
+    Mat homography = Calib3d.findHomography(objectMatrix, sceneMatrix, Calib3d.RANSAC, 3);
+    Mat objectCorners = new Mat(4, 1, CvType.CV_32FC2);
+    Mat sceneCorners = new Mat(4, 1, CvType.CV_32FC2);
+    objectCorners.put(0, 0, new double[]{0,0});
+    objectCorners.put(1, 0, new double[]{objectImage.cols(),0});
+    objectCorners.put(2, 0, new double[]{objectImage.cols(),objectImage.rows()});
+    objectCorners.put(3, 0, new double[]{0,objectImage.rows()});
+    Core.perspectiveTransform(objectCorners, sceneCorners, homography);
+    int offset = objectImage.cols();
+    Imgproc.line(output, 
+            new Point(sceneCorners.get(0, 0)[0]+offset, sceneCorners.get(0, 0)[1]), 
+            new Point(sceneCorners.get(1, 0)[0]+offset, sceneCorners.get(1, 0)[1]), RECT_SCALAR, 4);
+    Imgproc.line(output, 
+            new Point(sceneCorners.get(1, 0)[0]+offset, sceneCorners.get(1, 0)[1]), 
+            new Point(sceneCorners.get(2, 0)[0]+offset, sceneCorners.get(2, 0)[1]), RECT_SCALAR, 4);
+    Imgproc.line(output, 
+            new Point(sceneCorners.get(2, 0)[0]+offset, sceneCorners.get(2, 0)[1]), 
+            new Point(sceneCorners.get(3, 0)[0]+offset, sceneCorners.get(3, 0)[1]), RECT_SCALAR, 4);
+    Imgproc.line(output, 
+            new Point(sceneCorners.get(3, 0)[0]+offset, sceneCorners.get(3, 0)[1]), 
+            new Point(sceneCorners.get(0, 0)[0]+offset, sceneCorners.get(0, 0)[1]), RECT_SCALAR, 4);
+    return output;
+  }
+\end{lstlisting}
+\end{itemize}.
 
-Descrizione della risoluzione del problema in ambiente shared memory.
 \section{Versione Distibuita con Hadoop}
 Descrizione della versione distribuita con Hadoop
 \section{Analisi delle prestazioni}
