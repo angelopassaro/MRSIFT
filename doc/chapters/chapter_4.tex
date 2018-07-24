@@ -8,7 +8,7 @@ Scale-invariant feature transform (SIFT) è un algoritmo utilizzato in computer 
 Per poter individuare dei keypoints abbiamo bisogno di diverse scale di un immagine quindi viene applicato un filtro per la scala. Questo filtro utilizza la \textbf{Laplaciana di una Gaussiana}(LoG) che permette di rilevare blob di varie dimensioni grazie all'utilizzo di $\sigma$ che funge come parametro di scala. Poichè LoG è costoso SIFT usa la differenza gaussiana(DoG) come alternativa che è una approssimazione del primo. La DoG è ottenuta come differenza di sfocatura gaussiana di un immagine con diversi $\sigma$ (si parte da un valore iniziale di $\sigma$ fino ad arrivare $k\sigma$) . Questo processo viene eseguito per diverse ottave dell'immagine.
 \begin{figure}[ht]
 	\begin{center}
-    \includegraphics[width=\linewidth]{DoG.jpg}
+    \includegraphics[scale=0.7]{DoG.jpg}
     \caption{Ottave di un immagine}
     \label{fig:DoG}
     	\end{center}
@@ -16,7 +16,7 @@ Per poter individuare dei keypoints abbiamo bisogno di diverse scale di un immag
 Una volta trovato DoG vengono cercati i keypoints che rappresentano meglio l'immagine confrontando i pixel su diverse scale, per esempio un pixel in una immagine viene confrontato con i suoi 8 vicini e e con i 9 pixel della scala precedente e successiva.
 \begin{figure}[ht]
   \begin{center}
-    \includegraphics[width=\linewidth]{kp.jpg}
+    \includegraphics[scale=0.7]{kp.jpg}
     \caption{Ricerca di un keypoints}
     \label{fig:kp}
     	\end{center}
@@ -110,9 +110,108 @@ Viene rilevato l'oggetto e in caso di esito positivo viene disegnata l'omografia
     return output;
   }
 \end{lstlisting}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[width=\linewidth]{omografia.jpg}
+    \caption{Esempio di esito positivo}
+    \label{fig:kp}
+    	\end{center}
+\end{figure}
+
 \end{itemize}.
 \section{Versione Distibuita con Hadoop}
-Descrizione della versione distribuita con Hadoop
+La versione distribuita funziona nel seguente modo, prese una serie di immagini query(oggetto da cercare) e una serie di train(scene) ogni oggetto viene cercato in tutte le scene.
+Il core resta lo stesso visto precedentemente in \emph{\textit{SiftManager}} viene aggiunto  \emph{\textit{SiftUtilis}} che presenta delle funzioni di supporto per le diverse conversione necessarie per poter effettuare il trasferimento di immagini su Hadoop, \emph{\textit{SiftReduce}} per il reduce sul cluster di Hadoop, \emph{\textit{SiftMapper}} per il mapping ,\emph{\textit{MatWritable}} e \emph{\textit{MatOfKeyPointWritable}} per serializzare il risultato ottenuto dal reduce e poterlo passare al map.
+Reduce
+\begin{lstlisting}
+protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
+    for (MapWritable map : values) {
+      MatWritable receivedImage = ((MatWritable) map.get(new Text(SiftUtils.OBJ_IMG)));
+      MatOfKeyPointWritable receivedKeyPoints = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_KPS)));
+      MatOfKeyPointWritable receivedObjectDescriptors = ((MatOfKeyPointWritable) map.get(new Text(SiftUtils.OBJ_DSC)));
+      MatOfKeyPoint objectDescriptors = receivedObjectDescriptors.getMatOfKeyPoint();
+      MatOfKeyPoint objectKeypoints = receivedKeyPoints.getMatOfKeyPoint();
+      SiftManager manager = SiftManager.getInstance();
+      FileSystem fs = FileSystem.get(context.getConfiguration());
+      Path scenePath = Path.mergePaths(fs.getHomeDirectory(), new Path("/scenes"));
+      RemoteIterator iterator = fs.listLocatedStatus(scenePath);
+      SIFT sift = SIFT.create();
+      while (iterator.hasNext()) {
+        LocatedFileStatus lfs = (LocatedFileStatus) iterator.next();
+        String format = SiftUtils.extractFormat(lfs.getPath().getName());
+        String name = lfs.getPath().getName();
+        if (lfs.isFile()) {
+          InputStream input = fs.open(lfs.getPath());
+          Mat sceneImg = SiftUtils.readInputStreamIntoMat(input);
+          MatOfKeyPoint sceneKeyPoints = manager.extractKeypoints(sceneImg, sift);
+          MatOfKeyPoint sceneDescriptors = manager.extractDescriptors(sceneImg, sceneKeyPoints, sift);
+          MatOfDMatch matches = manager.calculateMatches(objectDescriptors, sceneDescriptors);
+          Mat outputImg = manager.detectObject(receivedImage.getImage(), sceneImg, matches, objectKeypoints, sceneKeyPoints);
+          context.write(key, new MatWritable(outputImg, name, format));
+        }
+      }
+    }
+}
+\end{lstlisting}
+Map
+\begin{lstlisting}
+ @Override
+  protected void map(Text key, MatWritable value, Context context) throws IOException, InterruptedException {
+    SIFT sift = SIFT.create();
+    SiftManager manager = SiftManager.getInstance();
+    MatOfKeyPoint objectKeyPoints = manager.extractKeypoints(value.getImage(), sift);
+    MatOfKeyPoint objectDescriptors = manager.extractDescriptors(value.getImage(), objectKeyPoints, sift);
+    MapWritable map = new MapWritable();
+    map.put(new Text(SiftUtils.OBJ_IMG), value);
+    map.put(new Text(SiftUtils.OBJ_KPS), new MatOfKeyPointWritable(objectKeyPoints));
+    map.put(new Text(SiftUtils.OBJ_DSC), new MatOfKeyPointWritable(objectDescriptors));
+    context.write(key, map);
+}
+\end{lstlisting}
+Poichè Hadoop lavora su stream di byte e openCV per rappresentare le immagini usa oggetti di tipo Mat si è reso necessario la creazioni di due metodi, \emph{\textit{matToByte}} e \emph{\textit{byteToMat}}, per poter effettuare la conversione da Mat a byte e viceversa
+\begin{lstlisting}
+  public static int totalSize(Mat image){
+    return Math.toIntExact(image.total()) * image.channels();
+}
+
+  public static byte[] matToByte(Mat image){
+    byte[] bytes = new byte[SiftUtils.totalSize(image)];
+    image.get(0, 0, bytes);
+    return bytes;
+  }
+  
+  public static Mat byteToMat(byte[] bytes, int width, int height, int type){
+    Mat image = new Mat(height, width, type);
+    image.put(0, 0, bytes);
+    return image;
+  }
+\end{lstlisting}
+Per poter leggere le immagini passate dal reduce bisogna convertirle in Mat \emph{\textit{readInputStreamIntoMat}}
+\begin{lstlisting}
+  private static byte[] readStream(InputStream stream) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    int nRead;
+    byte[] data = new byte[16384];
+    while ((nRead = stream.read(data, 0, data.length)) != -1) {
+      buffer.write(data, 0, nRead);
+    }
+    buffer.flush();
+    byte[] temporaryImageInMemory = buffer.toByteArray();
+    buffer.close();
+    stream.close();
+    return temporaryImageInMemory;
+  }
+
+  public static Mat readInputStreamIntoMat(InputStream inputStream) throws IOException {
+    byte[] temporaryImageInMemory = readStream(inputStream);
+    Mat outputImage = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory),
+            Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE);
+    return outputImage;
+}
+\end{lstlisting}
+
 \section{Analisi delle prestazioni}
 %TODO fare weak scaling e strong scaling
+Per i testo sono stati presi 150 oggetti dal seguente dataset \url{https://authors.library.caltech.edu/7694/} e generate 5000 scene tramite uno script python, dove posizioniamo 4 oggetti in uno sfondo presi in maniera casuale dal nostro dataset,  con due oggetti ruotati e gli altri due  res
 Vengono forniti i benchmark con rispettive spiegazioni
