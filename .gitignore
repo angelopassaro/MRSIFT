@@ -26,6 +26,10 @@
 *.log
 *.fls
 *.fdb_latexmk
+*.aux~
+*.tex~
+*.out
+*.pdf
 .directory
 
 # Maven 
