@@ -48,7 +48,7 @@ public class MrsiftTest {
      Assert.assertEquals("It should return same dump", testMat.dump(), ac.dump());
   }
   
-  @Test
+  @Ignore
   public void testExtractFormat(){
     String filePath = "filepathverylong.ghd.png";
     Assert.assertEquals("It should return png", "png", SiftUtils.extractFormat(filePath));
