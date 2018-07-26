@@ -53,9 +53,61 @@ Il componente fondamentale su cui si appoggia un sistema operativo è sicurament
 \section{File System} 
 In un datacenter è indispensabile avere un filesystem distribuito che sia trasparente e che nasconda all'utente che usufruisce del cluster l'effettiva locazione dei file sui dischi o di come siano memorizzati. L'informatica ha conosciuto diverse filosofie di implementazioni di filesystem su reti a partire dai primi anni 70 con l'invenzione del primo filesystem ma i primi tentativi concreti sono stati ottenuti con l'introduzione del protocollo \textbf{SMB} (Server Message Block) ed è ancora tuttora utilizzato da Windows e da Linux (Samba).
 \subsection{AFS}
-L'Andrew File system nato negli anni 80 è stato il precursore dei moderni file system distribuiti. Sviluppato alla Carnagie Mellow, presentava un architettura client server (Venus e Vice) e vennero sviluppati diversi protitipi. L'idea di base è che il client Venus richieda al server Vice solamente l'ubicazione del file quando è necessario aprire o chiudere quest'ultimo mentre invece per effettuare delle modifiche come ad esempio delle scritture vengono passate delle copie. Di AFS furono sviluppati vari prototipi tra per migliorarne le prestazioni e infatti nelle versioni successive furono introdotte comunicazione tramite RPC, um migliore meccanismo di gestione della cache e diminuiti i context switching dei processi Vice. Un difetto che ha portato questo file system ad essere poi lentamente rimpiazzato da NFS è stata una mancanza ottimale della gestione dellla coerenza dei dati in cache che non permetteva aggiornamenti in parallelo dei dati ma si era costretti a lavorare su copie dei dati e poi essere spedite nuovamente al server che, tramite meccanismi di callback, gestiva la coerenza.
+L'Andrew File system nato negli anni 80 è stato il precursore dei moderni file system distribuiti. Sviluppato alla Carnagie Mellow, presentava un architettura client server (Venus e Vice) e vennero sviluppati diversi protitipi. L'idea di base è che il client Venus richieda al server Vice solamente l'ubicazione del file quando è necessario aprire o chiudere quest'ultimo mentre invece per effettuare delle modifiche come ad esempio delle scritture vengono passate delle copie. Di AFS furono sviluppati vari prototipi tra per migliorarne le prestazioni e infatti nelle versioni successive furono introdotte comunicazione tramite RPC, um migliore meccanismo di gestione della cache e diminuiti i context switching dei processi Vice. \\
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[width=\linewidth]{afs.png}
+    \caption{L'architettura di AFS}
+    \label{hyp}
+  \end{center}
+\end{figure}
+Un difetto che ha portato questo file system ad essere poi lentamente rimpiazzato da NFS è stata una mancanza ottimale della gestione dellla coerenza dei dati in cache che non permetteva aggiornamenti in parallelo dei dati ma si era costretti a lavorare su copie dei dati e poi essere spedite nuovamente al server che, tramite meccanismi di callback, gestiva la coerenza.
 \subsection{NFS}
-Un aprroccio completamente ortogonale ad AFS fu il Network File System o conosciuto come NFS, ideato dalla Sun Microsystem nel 1984 di cui sono esistite 4 versioni, ognuna che introdusse nuove funzionalità. La maggiore differenza con AFS risiede nell'architettura con cui è costruito; mentre nel primo c'era una netta distinzione tra client e server, in NFS la comunicazione è sempre di questo tipo ma il componente che implementa il client e il server è il medesimo e questo ha permesso di aumentarne la portabilità, permettendo così di supportare piattaforme hardware e software eterogenee, e il modulo è caricato all'interno del kernel-space (a differenza di AFS dove sia client che server erano implementati nello user-space) avendo così un aumento delle prestazioni. Il funzionamento di NFS è molto semplice: Un file system (o una porzione di esso) viene montato su NFS facendo sì che diversi client accedano alle risorse (rispettando gli opportuni privilegi) e comunicando attraverso chiamate RPC.
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[width=\linewidth]{nfs.jpg}
+    \caption{L'architettura di NFS}
+    \label{hyp}
+  \end{center}
+\end{figure}
+Un aprroccio completamente ortogonale ad AFS fu il Network File System o conosciuto come NFS, ideato dalla Sun Microsystem nel 1984 di cui sono esistite 4 versioni, dove ognuna introdusse nuove funzionalità. La maggiore differenza con AFS risiede nell'architettura con cui è costruito; mentre nel primo c'era una netta distinzione tra client e server, in NFS la comunicazione è sempre di questo tipo ma il componente che implementa il client e il server è il medesimo e questo ha permesso di aumentarne la portabilità, permettendo così di supportare piattaforme hardware e software eterogenee, e il modulo è caricato all'interno del kernel-space (a differenza di AFS dove sia client che server erano implementati nello user-space) avendo così un aumento delle prestazioni. Il funzionamento di NFS è molto semplice: Un file system (o una porzione di esso) viene montato su NFS facendo sì che diversi client accedano alle risorse (rispettando gli opportuni privilegi) e comunicando attraverso chiamate RPC.
+\subsection{LFS}
+Nel 1992 la University of California propose un log-structured file system, nominato Sprite LFS, ovvero un filesystem dove i dati e i metadati sono scritti sequenzialmente in un buffer circolare, chiamato log. \\
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[scale=0.3]{lfs.png}
+    \caption{Il buffer di LFS}
+    \label{hyp}
+  \end{center}
+\end{figure}
+Ogni sequenza di modifiche viene bufferizzata in cache e poi scritta sequenzialmente sul log (disco). Il problema principale di un log-structured file system è quello di mantenere grandi sezioni contigue di spazio libero su disco. Il disco viene diviso in sezioni di dimensione fissa, chiamate segmenti. I dati vengono scritti sequenzialmente dall'inizio alla fine di ogni segmento.Si raggruppano i segmenti parzialmente vuoti in un piccolo numero di segmenti pieni in modo da creare spazio contiguo per nuovi segmenti. Sebbene in grado di massimizzare la larghezza di banda usata per scrivere nuovi dati, questo filesystem non consente di effettuare snapshot o versioning e potrebbe creare complesse frammentazioni del file system.
 \subsection{Coda}
-
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[width=\linewidth]{coda.png}
+    \caption{L'architettura di Coda}
+    \label{hyp}
+  \end{center}
+\end{figure}
+Nel 1987 alla Carnagie Mellon University iniziò lo sviluppo di Coda, un file system distribuito. L'obiettivo era quello di realizzare un file system che sfruttasse i vantaggi offerti da un repository di dati condiviso e che fosse in grado di lavorare anche in caso di un guasto remoto o di momenti critici. L'idea principale è quella di usa una cache locale che fornisce accesso ai dati del server anche quandola connessione di rete si interrompe. Un utente legge e scrive dal file system normalmente, mentre il client "accumula" tutti i dati listati dall'utente in caso di disconnessione di rete.
+Se la connessione di rete si interrompe, la cache locale del client distribuisce i dati dalla sua cache e fa il log degli aggiornamenti. Quest'operazione prende il nome di disconnecction operation. Alla riconnesione della rete, il client invia gli aggiornamenti loggati ai server. Una sostanziale differenza tra Coda e AFS consiste nel metodo di replica, nel caso di quest ultimo c'è un solo server di lettura/scrittura in grado di ricevere aggiornamenti mentre i rimanenti server lavorano come replice in sola lettura. Al contrario Coda consente a tutti i server di ricevere aggiornamenti, a favore di una maggiore availability.
+\subsection{xFS}
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[scale=0.7]{xfs.png}
+    \caption{Due possibili installazioni di xFS}
+    \label{hyp}
+  \end{center}
+\end{figure}
+Unico nel suo genere, xFS è un prototipo di un network file system senza server realizzato nel 1996 alla University of California. Lo scopo di questo lavoro era superare i problemi di un sistema con un server centralizzato, dove quest'entità costituisce un collo di bottiglia e un single point of failure. Per distribuire in maniera dinamica il processo di controllo e di archiviazione dei dati xFS si affida a precedenti lavori di ricerca, in particolare utilizza RAID per lo storage dei dati, LFS per la composizione dei log del filesystem, Zebra, un filesystem che a sua volta combina i vantaggi di RAID e LFS (ma che nel caso di xFS sono estesi al distribuito) ed infine Dash e Alewife per la cache consistency. In assenza di un server centrale, in xFS i task svolti da quest'unità vengono delegati a quatto entità: i client, che accedono al sistema, i metadata manager che gestiscono la cache e il mapping dei metadati sul disco, gli storage server che memorrizzano i dati e i cleaner che riorganizzano i dati. Un approccio del genere, seppure in grado di ottenere alte prestazioni, risulta appropriato in ambienti dove le macchine hanno fiducia l'una nell'altra.
 \subsection{GFS}
+Nel 2003 BigG per fronteggiare il crescente aumento di dati gestiti realizzò un proprio file system distribuito, il Google File System. L'architettura si basa su pattern master/slave. Un cluster GFS consiste in un master e vari chunckserver. I file sono suddivisi in blocchi da 64 MB, chiamati chucks. \\
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[width=\linewidth]{gfs.png}
+    \caption{La struttura di GFS}
+    \label{hyp}
+  \end{center}
+\end{figure}
+Il master si occupa del controllo globale del sistema e di memorizzare i metadati del filesystem e, inoltre, periodicamente controlla lo stato dei chuckservers tramite dei messaggi chiamati HeartBeat. I chuckserver provvedono alla memorizzazione dei dati, in particolare tutti i dati sono replicati su un certo numero di chuckserver, 3 di default. 
+Dato che il master mantiene i metadati e gestisce la distribuzione dei file, è coinvolto nella lettura, modifica e rimozione dei chuncks. La taglia di 64 MB di un chuck può essere considerata un trade-off tra il cercare di limitare l'uso di risorse e le interazioni con il master da un lato e ottenere un alto grado di frammentazione interna dall'altro. GFS è implementato come una serie di componenti user mode eseguite su Linux. Quindi punta esclusivamente a fornire un file system distribuito lasciando il compito della gestione dei dichi ai filesystem di Linux. Basandosi su questa separazione, i chunckservers salvano ogni chunck come un file nel filesystem Linux.
