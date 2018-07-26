@@ -40,16 +40,44 @@ Un cluster HDFS ha due tipologie di nodi che seguono il paradigma master-slave: 
 \subsection{Paradigma Map-Reduce}
 Map-Reduce è un modello di programmazione per processare i dati. I programmi Map-Reduce sono inerentemente paralleli, così da permettere di fare analisi di dati in larga scala se a disposizione di abbastanza macchine, in particolare questo modello funziona al meglio con dataset di grandi dimensioni. Hadoop è in grado di eseguire programmi Map-Reduce scritti in vari linguaggi tra cui Java, Python e Ruby e il suo funzionamento suddivide il lavoro in due fasi: la fase di map e di reduce. Ogni fase ha delle coppie chiave-valore come input e output, i cui tipi potrebbero essere scelti dal programmatore. Il programmatore specifica anche due funzioni: la funzione di map e la funzione di reduce. Nello specifico Map prende in input una coppia \textit{<K,V>} e restituisce in output una lista di coppie intermedie \textit{<K',V'>} mentre Reduce acquisisce in input una lista di coppie intermedie \textit{<K,V> } con la stessa chiave e restituisce in output una lista di coppie \textit{<K',V'>}. Il paradigma Map-Reduce fornisce oltre alle suddette funzioni, anche parallelizzazione, distribuzione automatica, fault tolerance, schedulazione I/O, status e monitoring. Un programma costruito secondo questo modello divide i dati in input tramite la libreria MapReduce ed eseguiti tramite varie istanze del programma su un cluster di macchine. Una delle istanze, il master assegna i task alle altre macchine, gli slave (o worker).
 \subsubsection{Map}
-In questa fase un worker legge il blocco di input assegnato, dopodiché estrae da esso le coppie \textit{<K,V>} e le passa una alla volta alla funzione \textit{map()}. La funzione \textit{map()} a sua volta produce delle coppie \textit{<K',V'>}.
+In questa fase un worker legge il blocco di input assegnato, dopodiché estrae da esso le coppie \textit{<K,V>} e le passa una alla volta alla funzione \textit{map()}. La funzione \textit{map()} a sua volta produce delle coppie \textit{<K',V'>}. Per creare un mapper in Java è necessario che una classe estenda la classe Mapper che presenta la seguente firma:
+\begin{lstlisting}
+public class Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+  protected void map(KEYIN key, VALUEIN value, Context context) throws IOException, InterruptedException {
+    //method body here
+  }
+}
+\end{lstlisting}
+Nel corpo del metodo \textit{map} è possibile inserire il proprio algoritmo per trasformare l'input nella maniera che si desidera da mandare al reduce con il metodo \textit{write} dell'instanza dell'oggetto di tipo \textit{Context}. Questo oggetto rappresenta il mezzo tramite il quale i Mapper e i Reducer interagiscono con il resto dell'ecosistema di Hadoop ed include informazioni fondamentali come ad esempio la configurazione dei job.
 \subsubsection{Reduce}
-Il master a questo punto assegna ad un worker un task di tipo reduce indicandogli una regione di dati da "ridurre". Un task reduce consiste nel prendere tutte le coppie \textit{<K,V>} raggruppate in modo che le chiavi siano uniche. Ogni gruppo viene passato quindi alla funzione \textit{reduce()}.
+Il master a questo punto assegna ad un worker un task di tipo reduce indicandogli una regione di dati da "ridurre". Un task reduce consiste nel prendere tutte le coppie \textit{<K,V>} raggruppate in modo che le chiavi siano uniche. Ogni gruppo viene passato quindi alla funzione \textit{reduce()}. In Java un reducer si crea estendendo la classe Reducer che ha la seguente firma:
+\begin{lstlisting}
+public class Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+  protected void reduce(KEYIN key, Iterable<VALUEIN> values, Context context) throws IOException, InterruptedException {
+    //method body here
+  }
+}
+\end{lstlisting}
+Nel corpo del metodo \textit{reduce} è possibile inserire il proprio algoritmo per eseguire l'aggregazione degli output dei task map. Anche il reducer fa uso dell'oggetto \textit{Context} e del metodo \textit{write} per scrivere l'output prodotto. Sia Mapper che Reducer implementano due funzioni di hook chiamate all'inizio e alla fine di ogni task un'unica volta e sono rispettivamente il metodo \textit{setup()} e \textit{cleanup()} e sono utili quando c'è da effettuare un insieme di operazioni inizializzazione o di pulizia.
 \subsubsection{Splitter}
-Lo Splitter è quella componente che ha il compito di prendere l’intero input e di dividerlo in \textbf{InputSplit}, che verranno poi inviati ai vari map task. La mappatura \textit{< K, V >} degli InputSplit viene definita dalla classe InputFormat implementata. Hadoop mette a disposizione diverse implementazioni di InputFormat, ciononostante è possibile, ovviamente, definirne uno proprio da utilizzare durante la computazione implementando l’interfaccia \textit{InputFormat}. È da sottolineare il fatto che non si deve confondere l’InputSplit con il blocco utilizzato dall’HDFS. I due "blocchi" non necessariamente corrispondono. Possono infatti verificarsi dei casi in cui l’InputSplit utilizza dati presenti in più blocchi, causando un leggero overhead del sistema.
+Lo Splitter è quella componente che ha il compito di prendere l’intero input e di dividerlo in \textbf{InputSplit}, che verranno poi inviati ai vari map task. La mappatura \textit{< K, V >} degli InputSplit viene definita dalla classe InputFormat implementata. Hadoop mette a disposizione diverse implementazioni di InputFormat, ciononostante è possibile, ovviamente, definirne uno proprio da utilizzare durante la computazione implementando l’interfaccia \textit{InputFormat}. È da sottolineare il fatto che non si deve confondere l’InputSplit con il blocco utilizzato dall’HDFS. I due "blocchi" non necessariamente corrispondono. Possono infatti verificarsi dei casi in cui l’InputSplit utilizza dati presenti in più blocchi, causando un leggero overhead del sistema. Il framework Hadoop mette a disposizione diversi splitter oltre a poterni creare di nuovi creando una nuova classe che estenda la classe \textit{InputSplit}.
+\begin{lstlisting}
+public abstract class InputSplit {
+  public abstract long getLength() throws IOException, InterruptedException;
+  public abstract String[] getLocations() throws IOException, InterruptedException;
+}
+\end{lstlisting}
+Questa classe non contiene alcun tipo di dato ma solo i riferimenti dell'ubicazione e della lunghezza di questi ultimi infatti questa classe è d'aiuto alle classi \textit{InputFormat} e \textit{RecordReader} le quali sono responsabili di recuperare e leggere i dati in maniera efficiente per i MapReduce Task.
 \subsubsection{Partitioner}
-I Partitioner sono responsabili di dividere le coppie \textit{< K, V >} intermedie generate dai MapTask ai vari Reducer per la funzione di Reduce. Per dividere in maniera equa i compiti ai Reducer i partitioner usano una funzione di hash sulla chiave: $reducer = hash(K) mod n$.
-Il numero di partitioner è uguale al numero di reducer. Questo significa che un partitioner dividerà i dati in accordo al numero di reducer.In seguito, i dati passati da un singolo partitioner saranno processati da un singolo Reducer. Il numero totale di partizioni è lo stesso numero di Reducer task per il job.
+I Partitioner sono responsabili di dividere le coppie \textit{<K, V>} intermedie generate dai MapTask ai vari Reducer per la funzione di Reduce. Per dividere in maniera equa i compiti ai Reducer, i partitioner usano una funzione di hash sulla chiave: $reducer = hash(K) \bmod n$. Implementare un partitioner personalizzato in Java richiede estendere la classe \textit{Partitioner} che presenta la seguente interfaccia:
+\begin{lstlisting}
+public abstract class Partitioner<KEY, VALUE> {
+  public abstract int getPartition(KEY key, VALUE value, int numPartitions);
+}
+\end{lstlisting}
+Di default hadoop utilizza un \textit{HashPartitioner} il cui funzionamento è stato riportato poc'anzi.
 \subsubsection{Combiner}
-I Combiner permettono l'aggregazione in locale prima della fasi di shuffle e sorting. Quando un Job MapReduce è eseguito su un grande dataset, l'Hadoop Mapper genera grandi quantità di dati intermedi che sono passati all'Hadoop Reducer per un'ulteriore processamento, il che induce una pesante congestione sulla rete. Per risolvere questo problema MapReduce offre la funzione Combiner che gioca un ruolo cruciale nel ridurre la congestione di rete. Il Combiner a volte è chiamato anche Mini-reducer. È importante notare che il job primario di un Hadoop Combiner è processare l'output di dati dall'Hadoop Mapper, prima di passarli all'Hadoop Reducer. Quello che fa in pratica un Combiner è accettare gli input dalla classe Map e successivamente passare le coppie chiave-valore alla classe Reducer. La funzione principale di un Combiner è condensare i record dell'output map con la stessa chiave. Gli output (una collezione di chiave-valore) del Combiner saranno inviati sulla rete al Reducer task effettivo come input.
+I Combiner permettono l'aggregazione in locale prima della fasi di shuffle permettendo così di compattare l'input prima di essere spedito sulla rete ai reducer. In Java un Combiner deve estendere la classe Reducer, opera su ogni output del map task e le coppie chiavi-valore in output devono corrispondere a quelle del Reduce.
 \subsubsection{Shuffle e Sort}
 Map-Reduce garantisce che l'input ad ogni reducer sia ordinato per chiave. Il processo con il quale il sistema esegue il sort, e trasferisce gli output del map ai reducer come input, è conosciuto come shuffle.
 \section{Come funziona un Job Map Reduce}
@@ -60,7 +88,7 @@ A grandi linee possiamo riassumere un'esecuzione di MapReduce nei seguenti punti
   \item Mapping;
   \item Combining; 
   \item Partitioning, Shuffling e Sorting;
-  \item Reducing.
+  \item Reducing;
 \end{enumerate}
 È possibile eseguire un job MapReduce con una singola chiamata al metodo \textit{submit()} di un oggetto Job. Questa chiamata al metodo cela molta computazione ed è opportuno capire quali sono i passi compiuti da Hadoop  per eseguire un job. L'intero processo comprende, da una vista ad alto livello, cinque entità indipendenti:
 \begin{enumerate}
@@ -103,3 +131,17 @@ Piuttosto che avere una fase finale che fa il merge di questi cinque file in un 
 \end{figure}
 Il numero di fasi rimane invariato; è solo un'ottimizzazione per minimizzare la quantità di dati scritti su disco, dato che il passo finale fa il merge direttamente nella reduce.
 Durante la fase di reduce, la funzione di reduce è invocata per ogni chiave nell'output ordinato. L'output di questa fase è scritto direttamente sul filesystem di output, tipicamente HDFS. Nel caso di HDFS, dato che il node manager sta anche eseguendo un datanode, il primo blocco di replica sarà scritto sul disco locale.
+\subsection{Progetti Correlati}
+la fondazione Apache ha creato un insieme di progetti che si appoggiano su Hadoop, tutti quanti di ottimo successo, e che si focalizzano su particolari casi d'uso:
+\begin{description}
+  \item[Apache Avro:È un sistema di serializzazione dei dati utilizzato per poter sostituire quello che viene comunemente definito il problema maggiore di Haddop ovvero la non portabilità dei dati serializzati tramite i \textit{Writable}. I dati vengono descritti tramite l'ausilio di schemi scritti in JSON oppure tramite \textit{L'Avro IDL}. Un'altra caratteristica è che questi file possono essere splittabili e compressi e quindi utili per poter essere utilizzati dal MapReduce ed esendo indipendenti dal linguaggio, possono essere consumati anche utilizzando altri linguaggi di programmazione che non siano Java.
+  \item[Apache Parquet:] È un formato di storage a colonne capace di memorizzare in maniera efficiente dati innestati. Memorizzare a colonne può essere molto vantaggioso in termini di spazio e di efficienza: nel primo caso lo storage è più efficiente di quello a righe perchè i dati sono "simili" e facili da codificare (ad esempio se si volesse memorizzare un timestamp si portebbe memorizzare il primo valore e nelle colonne succesive solamente i delta di tempo passati), nel secondo caso un query engine può saltare le colonne che non sono utili alla query. Questo formato è stato sviluppato da Twitter e Cloudera (uno dei piàù importanti fornitori di ambienti hadoop) utilizzanod tecninche innovative per memorizzare file in formato colonne rendendo minimi gli overhead. Anche questo fomrmato ècompatibile con MapReduce.
+  \item[Apache Flume:] Ci sono molti sistemi che non fanno uso dell'HDFS per processare i dati ma allo stesso tempo hanno bisogno del MapReduce per processarli. Apache Flume cerca di andare incotro a questa esigenza, ed ha creato un ecosistema per processare enormi moli di dati event-based per poi mandarli ad Hadoop. Un esempio possono essere il log file di un web server e in questo caso Flume automatizza il processo di aggregazione dei file e spostamento sull'HDFS in maniera trasparente. L'idea è quella di lanciare dei processi Java (agent) in distribuito che collezionano i dati, li aggregano e li memorizzano nella sua destinazione finale.
+  \item[Apache Sqoop:] A volte può succedere che il dataset su cui debba lavorare un job MapReduce, sia memorizzato in maniera struttrata all'interno di store strutturati come ad esempio un RDBMS. Sqoop risolve questo problema estraendo questi dati passandoli così ad Hadoop per effettuare le sue analisi.
+  \item[Apache Pig:] Basato su MapReduce, si pone ad un livello di astrazione ancora più alto, permettendo di manipolare dati più complessi ed effettuando operazioni che non sono possibile normalmente su Hadoop (come ad esempio le join tra i dati). È formato da due componenti: il linguaggio utilizzato per lavorare sul flusso dei dati chiamato \textbf{Pig Latin} e l'ambiente di esecuzione che può essere centralizzato o distribuito al di sopra di un cluster Hadoop. È stato reato da Yahoo in risposta alle loro esigenze di effettuare mining su enrìormi moli di dati. 
+  \item[Apache Hive:] È un framework sviluppato per effettuare data warehousing con Hadoop. Ideato da Facebook per permettere a chi ha una buona padroanza con SQL di eseguire query su enormi volumi di dati e ad oggi riscuote un buon successo perchè utilizzato da molte organizzazioni per scopi di tutti i tipi.
+  \item[Apache Crunch:] È un insieme di API ad alto livello per produrre pipeline di MapReduce job. Il vantaggio principale che offre è che utilizza come tipi di dato quelli di Java, un insieme di operazioni di trasformazione dei dati già pronte all'utilizzo.
+  \item[Apache Spark:] Anch'esso serve per processare moli di dati ma a differenza degli ambienti precedenti, non si appoggia su MapReduce ma utilizza un suo runtime  però può essere integrato con YARN e HDFS. Spark è conosciuto per la sua abilità di mantenere grossi dataset in memoria tra i diversi job e questo approccio funziona bene su algoritmi di tipo iterativo e su analisi interattive.
+  \item[Apache HBase:] È un database distribuito orientato a colonne costruito al di sopra di HDFS. Il suo uso comune è per costruire \textbf{webtable}.
+  \item[Apache Zookeeper:] È un servizio di coordinamento che permette di costruire applicazioni distribuite riducendo al minimo le failure.
+\end{description}
