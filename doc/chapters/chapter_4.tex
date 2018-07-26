@@ -35,21 +35,19 @@ I keypoints tra due immagini sono abbinati identificando i loro vicini più vici
 \subsection{OpenCV}
 Per l'implementazione dell'object detection è stato utilizzato OpenCV. OpenCV (Open Source Computer Vision Library) è una libreria open source di computer vision e di apprendimento automatico, realizzato per fornire un'infrastruttura comune per le applicazioni di visione artificiale e per accelerare l'uso della percezione della macchina nei prodotti commerciali. OpencCV è rilasciato con licenza BSD e la sua libreria ha più di 2500 algoritmi ottimizzati, che comprendono un set completo di algoritmi di visione artificiale e di apprendimento automatico sia classici che all'avanguardia. questi algoritmi possono essere utilizzati per rilevare e riconoscere i volti, identificare gli oggetti, classificare azioni umane nei video, tracciare i movimenti della telecamera, tracciare oggetti in movimento, estrarre modelli 3D di oggetti, trova immagini simili da un database di immagini, rimuovi gli occhi rossi dalle immagini scattate con il flash, segui i movimenti degli occhi, riconosci i paesaggi e stabilisci i marcatori per sovrapporli alla realtà aumentata, ecc. OpenCV supporta diversi linguaggi C++, Python, Java e MATLAB e i pricipali sistemi operativi Linux, Windows Mac os, e Android.
 \section{Versione Sequenziale}
-Il core della versione sequenziale è il \emph{\textit{SiftManager}}. L'algoritmo prevede l'individuazione di un unico oggetto(query) all'interno di una o più scene(train). Il nostro algoritmo esegue tre step:
+Il core della versione sequenziale è il \emph{\textit{SiftManager}}. L'algoritmo prevede l'individuazione di un unico oggetto(query) all'interno di una o più scene(train). Il nostro algoritmo esegue cinque step:
 \begin{itemize}
 \item \textbf{Fase Uno :}\\
 Vengono estratte le caratteristiche grazie all'algoritmo SIFT dall'immagine query e dall'immagine di train.
 Prima vengono estratti i keypoints attraverso \emph{\textit{extractKeypoints}} e successivamente i descrittori con \emph{\textit{extractDescriptors}}
 \begin{lstlisting}
- @Override
-  public MatOfKeyPoint extractKeypoints(Mat image, Feature2D extractor) {
-    MatOfKeyPoint imageKeyPoints = new MatOfKeyPoint();
-    extractor.detect(image, imageKeyPoints);
-    return imageKeyPoints;
+ public static MatOfKeyPoint extractKeypoints(Mat image, Feature2D extractor) {
+    MatOfKeyPoint imageKeypoint = new MatOfKeyPoint();
+    extractor.detect(image, imageKeypoint);
+    return imageKeypoint;
   }
 
-  @Override
-  public MatOfKeyPoint extractDescriptors(Mat image, MatOfKeyPoint imageKeypoints, Feature2D extractor) {
+  public static MatOfKeyPoint extractDescriptors(Mat image, MatOfKeyPoint imageKeypoints, Feature2D extractor) {
     MatOfKeyPoint imageDescriptors = new MatOfKeyPoint();
     extractor.compute(image, imageKeypoints, imageDescriptors);
     return imageDescriptors;
@@ -58,57 +56,84 @@ Prima vengono estratti i keypoints attraverso \emph{\textit{extractKeypoints}} e
 \item \textbf{Fase Due :}\\
 Viene effettuato il match tra le immagini query e train utilizzando l'algoritmo di Brute Force basato sulla distanza Euclidea e utilizzando il crosscheck, che permette di ritornare una coppia di punti (i,j) che risulta essere la più vicina nel matcher.
 \begin{lstlisting}
-  @Override
-  public MatOfDMatch calculateMatches(MatOfKeyPoint objectDescriptors, MatOfKeyPoint sceneDescriptors) {
-    MatOfDMatch matches = new MatOfDMatch();
-    BFMatcher matcher = BFMatcher.create(Core.NORM_L2, true);
-    matcher.match(objectDescriptors, sceneDescriptors, matches);
-    return matches;
-  }
+  public static MatOfDMatch calculateMatches(MatOfKeyPoint objectDescriptor, MatOfKeyPoint sceneDescriptor, DescriptorMatcher matcher) {
+    List<MatOfDMatch> knnMatches = new ArrayList<>();
+    matcher.knnMatch(objectDescriptor, sceneDescriptor, knnMatches, 2);
+    List<DMatch> listOfGoodMatches = new ArrayList<>();
+    for (int i = 0; i < knnMatches.size(); i++) {
+      if (knnMatches.get(i).rows() > 1) {
+        DMatch[] matches = knnMatches.get(i).toArray();
+        if (matches[0].distance < RATIO_THRESHOLD * matches[1].distance) {
+          listOfGoodMatches.add(matches[0]);
+        }
+      }
+    }
+    MatOfDMatch goodMatches = new MatOfDMatch();
+    goodMatches.fromList(listOfGoodMatches);
+    return goodMatches;
+}
 \end{lstlisting}
 \item \textbf{Fase Tre :}\\
-Viene rilevato l'oggetto e in caso di esito positivo viene disegnata l'omografia intorno all'oggetto.
+Viene rilevato l'oggetto tracciandone calcolandone l'omografia.
 \begin{lstlisting}
-  @Override
-  public Mat detectObject(Mat objectImage, Mat sceneImage, MatOfDMatch matches, 
-          MatOfKeyPoint objectKeyPoints, MatOfKeyPoint sceneKeyPoints) {
-    Mat output = new Mat();
-    Features2d.drawMatches(objectImage, objectKeyPoints, sceneImage, sceneKeyPoints, 
-            matches, output, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.NOT_DRAW_SINGLE_POINTS);
-    List<KeyPoint> objkeys = objectKeyPoints.toList();
-    List<KeyPoint> scnkeys = sceneKeyPoints.toList();
-    List<DMatch> goodMatches = matches.toList();
-    List<Point> oPoints = goodMatches.stream().map(m -> objkeys.get(m.queryIdx).pt)
-            .collect(Collectors.toList());
-    List<Point> sPoints = goodMatches.stream().map(m -> scnkeys.get(m.trainIdx).pt)
-            .collect(Collectors.toList());
-    MatOfPoint2f objectMatrix = new MatOfPoint2f();
-    MatOfPoint2f sceneMatrix = new MatOfPoint2f();
-    objectMatrix.fromList(oPoints);
-    sceneMatrix.fromList(sPoints);
-    Mat homography = Calib3d.findHomography(objectMatrix, sceneMatrix, Calib3d.RANSAC, 3);
-    Mat objectCorners = new Mat(4, 1, CvType.CV_32FC2);
-    Mat sceneCorners = new Mat(4, 1, CvType.CV_32FC2);
-    objectCorners.put(0, 0, new double[]{0,0});
-    objectCorners.put(1, 0, new double[]{objectImage.cols(),0});
-    objectCorners.put(2, 0, new double[]{objectImage.cols(),objectImage.rows()});
-    objectCorners.put(3, 0, new double[]{0,objectImage.rows()});
-    Core.perspectiveTransform(objectCorners, sceneCorners, homography);
-    int offset = objectImage.cols();
-    Imgproc.line(output, 
-            new Point(sceneCorners.get(0, 0)[0]+offset, sceneCorners.get(0, 0)[1]), 
-            new Point(sceneCorners.get(1, 0)[0]+offset, sceneCorners.get(1, 0)[1]), RECT_SCALAR, 4);
-    Imgproc.line(output, 
-            new Point(sceneCorners.get(1, 0)[0]+offset, sceneCorners.get(1, 0)[1]), 
-            new Point(sceneCorners.get(2, 0)[0]+offset, sceneCorners.get(2, 0)[1]), RECT_SCALAR, 4);
-    Imgproc.line(output, 
-            new Point(sceneCorners.get(2, 0)[0]+offset, sceneCorners.get(2, 0)[1]), 
-            new Point(sceneCorners.get(3, 0)[0]+offset, sceneCorners.get(3, 0)[1]), RECT_SCALAR, 4);
-    Imgproc.line(output, 
-            new Point(sceneCorners.get(3, 0)[0]+offset, sceneCorners.get(3, 0)[1]), 
-            new Point(sceneCorners.get(0, 0)[0]+offset, sceneCorners.get(0, 0)[1]), RECT_SCALAR, 4);
-    return output;
+  public static Mat localizeObject(List<KeyPoint> objectKeypoints, List<KeyPoint> sceneKeypoints, MatOfDMatch goodMatches) {
+    List<Point> obj = new ArrayList<>();
+    List<Point> scene = new ArrayList<>();
+    List<DMatch> listOfGoodMatches = goodMatches.toList();
+    for (int i = 0; i < listOfGoodMatches.size(); i++) {
+      obj.add(objectKeypoints
+          .get(listOfGoodMatches.get(i).queryIdx).pt);
+      scene.add(sceneKeypoints
+          .get(listOfGoodMatches.get(i).trainIdx).pt);
+    }
+    MatOfPoint2f objMat = new MatOfPoint2f(), sceneMat = new MatOfPoint2f();
+    objMat.fromList(obj);
+    sceneMat.fromList(scene);
+    Mat H = Calib3d.findHomography(objMat, sceneMat, Calib3d.RANSAC, RANSAC_THRESHOLD);
+    return H;
+}
+\end{lstlisting}
+\item \textbf{Fase Quattro:}\\
+Si effettua una stima sulla bontà dell'omografia.
+\begin{lstlisting}
+  public static boolean checkHomography(Mat homography){
+    double firstCheck = Math.abs(Math.abs(homography.get(0, 0)[0]) - Math.abs(homography.get(1, 1)[0]));
+    double secondCheck = Math.abs(Math.abs(homography.get(0, 1)[0]) - Math.abs(homography.get(1, 0)[0]));
+    return firstCheck <= 0.1 && secondCheck <= 0.1;
   }
+\end{lstlisting}
+\item \textbf{Fase Cinque:}\\
+Se la stima avviene con successo si disegna l'immagine in output, mostrando i match e l'omografia.
+\begin{lstlisting}
+  public static Mat drawImage(Mat objectImage, Mat sceneImage, MatOfKeyPoint objectKeypoints, MatOfKeyPoint sceneKeypoints, MatOfDMatch matches, Mat homography) {
+    Mat outputImage = new Mat();
+    Features2d.drawMatches(objectImage, objectKeypoints, sceneImage, sceneKeypoints, matches, outputImage, Scalar.all(-1),
+            Scalar.all(-1), new MatOfByte(), Features2d.NOT_DRAW_SINGLE_POINTS);
+    Mat objCorners = new Mat(4, 1, CvType.CV_32FC2), sceneCorners = new Mat();
+    float[] objCornersData = new float[(int) (objCorners.total() * objCorners.channels())];
+    objCorners.get(0, 0, objCornersData);
+    objCornersData[0] = 0;
+    objCornersData[1] = 0;
+    objCornersData[2] = objectImage.cols();
+    objCornersData[3] = 0;
+    objCornersData[4] = objectImage.cols();
+    objCornersData[5] = objectImage.rows();
+    objCornersData[6] = 0;
+    objCornersData[7] = objectImage.rows();
+    objCorners.put(0, 0, objCornersData);
+    Core.perspectiveTransform(objCorners, sceneCorners, homography);
+    float[] sceneCornersData = new float[(int) (sceneCorners.total() * sceneCorners.channels())];
+    sceneCorners.get(0, 0, sceneCornersData);
+    Imgproc.line(outputImage, new Point(sceneCornersData[0] + objectImage.cols(), sceneCornersData[1]),
+            new Point(sceneCornersData[2] + objectImage.cols(), sceneCornersData[3]), RECT_SCALAR, 4);
+    Imgproc.line(outputImage, new Point(sceneCornersData[2] + objectImage.cols(), sceneCornersData[3]),
+            new Point(sceneCornersData[4] + objectImage.cols(), sceneCornersData[5]), RECT_SCALAR, 4);
+    Imgproc.line(outputImage, new Point(sceneCornersData[4] + objectImage.cols(), sceneCornersData[5]),
+            new Point(sceneCornersData[6] + objectImage.cols(), sceneCornersData[7]), RECT_SCALAR, 4);
+    Imgproc.line(outputImage, new Point(sceneCornersData[6] + objectImage.cols(), sceneCornersData[7]),
+            new Point(sceneCornersData[0] + objectImage.cols(), sceneCornersData[1]), RECT_SCALAR, 4);
+    return outputImage;
+}
 \end{lstlisting}
 
 \begin{figure}[ht]
