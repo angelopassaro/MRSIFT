@@ -20,13 +20,13 @@ import org.apache.hadoop.util.ToolRunner;
 public class MRSIFT extends Configured implements Tool {
 
     public static final String OPENCV_LIB = "/libs/libopencv_java341.so";
-/*
+
     public static void load_library() {
         URL url = MRSIFT.class.getResource(OPENCV_LIB);
         File opencv = new File(url.getFile());
         System.load(opencv.getAbsolutePath());
     }
-    */
+    
 
     public static void main(String[] args) throws Exception {
 
