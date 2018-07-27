@@ -53,10 +53,12 @@ public class SiftReduce extends Reducer<Text, MapWritable, Text, MatWritable> {
           MatOfKeyPoint sceneKeyPoints = SiftManager.extractKeypoints(sceneImg, sift);
           MatOfKeyPoint sceneDescriptors = SiftManager.extractDescriptors(sceneImg, sceneKeyPoints, sift);
           MatOfDMatch matches = SiftManager.calculateMatches(objectDescriptors, sceneDescriptors, descriptor);
-          Mat homography = SiftManager.localizeObject(objectKeypoints.toList(), sceneKeyPoints.toList(), matches);
-          if (SiftManager.checkHomography(homography)) {
-            Mat outputImg = SiftManager.drawImage(receivedImage.getImage(), sceneImg, objectKeypoints, sceneKeyPoints, matches, homography);
-            context.write(key, new MatWritable(outputImg, name, format));
+          if (!matches.empty()) {
+            Mat homography = SiftManager.localizeObject(objectKeypoints.toList(), sceneKeyPoints.toList(), matches);
+            if (SiftManager.checkHomography(homography)) {
+              Mat outputImg = SiftManager.drawImage(receivedImage.getImage(), sceneImg, objectKeypoints, sceneKeyPoints, matches, homography);
+              context.write(key, new MatWritable(outputImg, name, format));
+            }
           }
         }
       }
