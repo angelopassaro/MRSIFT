@@ -115,6 +115,8 @@ public class SiftManager {
    * @return true if the homography is good
    */
   public static boolean checkHomography(Mat homography){
+    if(homography == null)
+      return false;
     double firstCheck = Math.abs(Math.abs(homography.get(0, 0)[0]) - Math.abs(homography.get(1, 1)[0]));
     double secondCheck = Math.abs(Math.abs(homography.get(0, 1)[0]) - Math.abs(homography.get(1, 0)[0]));
     return firstCheck <= 0.1 && secondCheck <= 0.1;
