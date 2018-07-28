@@ -54,7 +54,7 @@ Prima vengono estratti i keypoints attraverso \emph{\textit{extractKeypoints}} e
   }
 \end{lstlisting}
 \item \textbf{Fase Due :}\\
-Viene effettuato il match tra le immagini query e train utilizzando l'algoritmo di Brute Force basato sulla distanza Euclidea e utilizzando il crosscheck, che permette di ritornare una coppia di punti (i,j) che risulta essere la più vicina nel matcher.
+Viene effettuato il match tra le immagini query e train utilizzando l'algoritmo di Brute Force e utilizzando knnMatch con k = 2 , dove k indica il conteggio delle migliori corrispondenze trovate per ogni descrittore di query , inoltre viene effettuato anche il \textbf{ratio test} di Lowe (il valore ottimale per il ratio test è 0.75, dal paper di Lowe) sulle distanze dei punti per ogni coppia di match trovato, in modo da filtrare dei possibili falsi positivi.
 \begin{lstlisting}
   public static MatOfDMatch calculateMatches(MatOfKeyPoint objectDescriptor, MatOfKeyPoint sceneDescriptor, DescriptorMatcher matcher) {
     List<MatOfDMatch> knnMatches = new ArrayList<>();
@@ -147,8 +147,28 @@ Se la stima avviene con successo si disegna l'immagine in output, mostrando i ma
 \end{itemize}.
 \section{Versione Distibuita con Hadoop}
 La versione distribuita funziona nel seguente modo, prese una serie di immagini query(oggetto da cercare) e una serie di train(scene) ogni oggetto viene cercato in tutte le scene.
-Il core resta lo stesso visto precedentemente in \emph{\textit{SiftManager}} viene aggiunto  \emph{\textit{SiftUtilis}} che presenta delle funzioni di supporto per le diverse conversione necessarie per poter effettuare il trasferimento di immagini su Hadoop, \emph{\textit{SiftReduce}} per il reduce sul cluster di Hadoop, \emph{\textit{SiftMapper}} per il mapping ,\emph{\textit{MatWritable}} e \emph{\textit{MatOfKeyPointWritable}} per serializzare il risultato ottenuto dal reduce e poterlo passare al map.
-Reduce
+Il core resta lo stesso visto precedentemente in \emph{\textit{SiftManager}} viene aggiunto  \emph{\textit{SiftUtilis}} che presenta delle funzioni di supporto per le diverse conversione necessarie per poter effettuare il trasferimento di immagini su Hadoop, \emph{\textit{SiftReduce}} per il reduce sul cluster di Hadoop, \emph{\textit{SiftMapper}} per il mapping ,\emph{\textit{MatWritable}} e \emph{\textit{MatOfKeyPointWritable}} per serializzare il risultato ottenuto dal reduce e poterlo passare al map.\\
+\begin{itemize}
+
+\item \textbf{Map}:\\
+Il Map si occupa di estrarre i descrittori nei diversi oggetti da cercare successivamente nelle scene
+\begin{lstlisting}
+ @Override
+  protected void map(Text key, MatWritable value, Context context) throws IOException, InterruptedException {
+    SIFT sift = SIFT.create();
+    SiftManager manager = SiftManager.getInstance();
+    MatOfKeyPoint objectKeyPoints = manager.extractKeypoints(value.getImage(), sift);
+    MatOfKeyPoint objectDescriptors = manager.extractDescriptors(value.getImage(), objectKeyPoints, sift);
+    MapWritable map = new MapWritable();
+    map.put(new Text(SiftUtils.OBJ_IMG), value);
+    map.put(new Text(SiftUtils.OBJ_KPS), new MatOfKeyPointWritable(objectKeyPoints));
+    map.put(new Text(SiftUtils.OBJ_DSC), new MatOfKeyPointWritable(objectDescriptors));
+    context.write(key, map);
+}
+\end{lstlisting}
+
+\item \textbf{Reduce}: \\
+Il Reduce ha il compito di estrarre i descrittori della scena e successivamente di effettuare il match tra l'oggetto e la scena 
 \begin{lstlisting}
 protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
     for (MapWritable map : values) {
@@ -179,22 +199,9 @@ protected void reduce(Text key, Iterable<MapWritable> values, Context context) t
     }
 }
 \end{lstlisting}
-Map
-\begin{lstlisting}
- @Override
-  protected void map(Text key, MatWritable value, Context context) throws IOException, InterruptedException {
-    SIFT sift = SIFT.create();
-    SiftManager manager = SiftManager.getInstance();
-    MatOfKeyPoint objectKeyPoints = manager.extractKeypoints(value.getImage(), sift);
-    MatOfKeyPoint objectDescriptors = manager.extractDescriptors(value.getImage(), objectKeyPoints, sift);
-    MapWritable map = new MapWritable();
-    map.put(new Text(SiftUtils.OBJ_IMG), value);
-    map.put(new Text(SiftUtils.OBJ_KPS), new MatOfKeyPointWritable(objectKeyPoints));
-    map.put(new Text(SiftUtils.OBJ_DSC), new MatOfKeyPointWritable(objectDescriptors));
-    context.write(key, map);
-}
-\end{lstlisting}
-Poichè Hadoop lavora su stream di byte e openCV per rappresentare le immagini usa oggetti di tipo Mat si è reso necessario la creazioni di due metodi, \emph{\textit{matToByte}} e \emph{\textit{byteToMat}}, per poter effettuare la conversione da Mat a byte e viceversa
+
+\item  \textbf{SiftUtilis}: \\
+Poichè Hadoop lavora su stream di byte e openCV per rappresentare le immagini usa oggetti di tipo Mat si è reso necessario la creazioni di due metodi,  e \emph{\textit{byteToMat}}, per poter effettuare la conversione da Mat a byte e viceversa
 \begin{lstlisting}
   public static int totalSize(Mat image){
     return Math.toIntExact(image.total()) * image.channels();
@@ -235,8 +242,9 @@ Per poter leggere le immagini passate dal reduce bisogna convertirle in Mat \emp
     return outputImage;
 }
 \end{lstlisting}
+\end{itemize}
 
 \section{Analisi delle prestazioni}
 %TODO fare weak scaling e strong scaling
-Per i testo sono stati presi 150 oggetti dal seguente dataset \url{https://authors.library.caltech.edu/7694/} e generate 5000 scene tramite uno script python, dove posizioniamo 4 oggetti in uno sfondo presi in maniera casuale dal nostro dataset,  con due oggetti ruotati e gli altri due  res
+Per i test sono stati presi 150 oggetti e generate 5000 scene tramite uno script Python, dove posizioniamo 4 oggetti in uno sfondo presi in maniera casuale dal nostro dataset,  con due oggetti ruotati e gli altri due ridimensionati
 Vengono forniti i benchmark con rispettive spiegazioni
