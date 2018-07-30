@@ -243,8 +243,87 @@ Per poter leggere le immagini passate dal reduce bisogna convertirle in Mat \emp
 }
 \end{lstlisting}
 \end{itemize}
-
 \section{Analisi delle prestazioni}
 %TODO fare weak scaling e strong scaling
-Per i test sono stati presi 150 oggetti e generate 5000 scene tramite uno script Python, dove posizioniamo 4 oggetti in uno sfondo presi in maniera casuale dal nostro dataset,  con due oggetti ruotati e gli altri due ridimensionati
-Vengono forniti i benchmark con rispettive spiegazioni
+Per i test sono stati presi 150 oggetti e generate 5000 scene tramite uno script Python, dove posizioniamo 4 oggetti in uno sfondo presi in maniera casuale dal nostro dataset,  con due oggetti ruotati e gli altri due ridimensionati.
+\subsection{Sistema}
+I test sono stati effettuati su un cluster fornito dal GARR composto da 24 nodi.\\
+Ogni nodo ha le seguenti caratteristiche:\\
+\begin{itemize}
+\item \textbf{Hardware}:\\
+
+\begin{center}
+\begin{tabular}{ | c | c |} 
+\hline
+Intel Xeon E3-12xx v2 (Ivy Bridge), 64bit & x8 \\ 
+\hline
+Ram & 8GB \\ 
+\hline
+Scrittura disco & 3.1 GB/s \\
+\hline
+Lettura & 3.5 GB/s \\ 
+\hline
+\end{tabular}
+\end{center}
+
+\item \textbf{Software}:\\
+
+\begin{center}
+\begin{tabular}{ | c | c |} 
+\hline
+Sistema Operativo & 16.04.04 \\ 
+\hline
+Kernel & 4.4.0 \\ 
+\hline
+Java & 8 \\
+\hline
+Hadoop & 2.7.3 \\ 
+\hline
+\end{tabular}
+\end{center}
+\end{itemize}
+
+\subsection{Configurazioni}
+Configurazione di Yarn dei test effettuati
+
+\begin{center}
+\begin{tabular}{ | c | c |} 
+\hline
+yarn.nodemanager.resource.memory-mb & 32768 \\ 
+\hline
+yarn.nodemanager.resource.cpu-vcores & 8 \\ 
+\hline
+yarn.scheduler.minimum-allocation-vcores & 1 \\
+\hline
+yarn.scheduler.maximum-allocation-vcores & 2 \\ 
+\hline
+yarn.scheduler.minimum-allocation-mb & 2048 \\
+\hline
+yarn.scheduler.maximum-allocation-mb & 7168 \\
+\hline
+\end{tabular}
+\end{center}
+
+Configurazione di Mapred
+
+\begin{center}
+\begin{tabular}{ | c | c |} 
+\hline
+mapreduce.map.memory.mb & 4096 \\ 
+\hline
+mapreduce.reduce.memory.mb & 4096 \\ 
+\hline
+mapreduce.map.java.opts & -Xmx3276M \\
+\hline
+mapreduce.reduce.java.opts & -Xmx3276M \\ 
+\hline
+mapreduce.map.cpu.vcores & 2 \\
+\hline
+mapreduce.reduce.cpu.vcores & 2 \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Test 24 nodi}
+
+Test 24 nodi con 96 reduce
