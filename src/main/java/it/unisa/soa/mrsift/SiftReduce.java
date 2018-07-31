@@ -62,6 +62,7 @@ public class SiftReduce extends Reducer<Text, MapWritable, Text, MatWritable> {
           }
         }
       }
+      fs.close();
     }
   }
 }
