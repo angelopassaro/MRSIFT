@@ -146,8 +146,7 @@ Se la stima avviene con successo si disegna l'immagine in output, mostrando i ma
 
 \end{itemize}.
 \section{Versione Distibuita con Hadoop}
-La versione distribuita funziona nel seguente modo, prese una serie di immagini query(oggetto da cercare) e una serie di train(scene) ogni oggetto viene cercato in tutte le scene.
-Il core resta lo stesso visto precedentemente in \emph{\textit{SiftManager}} viene aggiunto  \emph{\textit{SiftUtilis}} che presenta delle funzioni di supporto per le diverse conversione necessarie per poter effettuare il trasferimento di immagini su Hadoop, \emph{\textit{SiftReduce}} per il reduce sul cluster di Hadoop, \emph{\textit{SiftMapper}} per il mapping ,\emph{\textit{MatWritable}} e \emph{\textit{MatOfKeyPointWritable}} per serializzare il risultato ottenuto dal reduce e poterlo passare al map.\\
+La versione distribuita funziona nel seguente modo, prese una serie di immagini query(oggetto da cercare) e una serie di train(scene) ogni oggetto viene cercato in tutte le scene. Il core resta lo stesso visto precedentemente in \emph{\textit{SiftManager}} viene aggiunto \emph{\textit{SiftUtilis}} che presenta delle funzioni di supporto per le diverse conversione necessarie per poter effettuare il trasferimento di immagini su Hadoop, \emph{\textit{SiftReduce}} per il reduce sul cluster di Hadoop, \emph{\textit{SiftMapper}} per il mapping ,\emph{\textit{MatWritable}} e \emph{\textit{MatOfKeyPointWritable}} per serializzare il risultato ottenuto dal reduce e poterlo passare al map.\\
 \begin{itemize}
 
 \item \textbf{Map}:\\
@@ -244,33 +243,28 @@ Per poter leggere le immagini passate dal reduce bisogna convertirle in Mat \emp
 \end{lstlisting}
 \end{itemize}
 \section{Analisi delle prestazioni}
-%TODO fare weak scaling e strong scaling
-Per i test sono stati presi 150 oggetti e generate 5000 scene tramite uno script Python, dove posizioniamo 4 oggetti in uno sfondo presi in maniera casuale dal nostro dataset,  con due oggetti ruotati e gli altri due ridimensionati.
+Analizzare le prestazioni di un applicativo parallelo significa eseguire dei \textbf{Test di Performance} e quindi bisogna eseguire un approccio preciso e deterministico sulla sua esecuzione. Questo test si occuperà di raggiungere due obiettivi: scalabilità della soluzione, correttezza dell'algoritmo. Per quanto riguarda il primo obiettivo definiamo come scalabilità la capacità di un sistema di adattarsi al carico di lavoro che riceve e in questo test, si è ritenuto opportuno focalizzarsi sulla \textbf{Strong Scalability} ossia verificare che all'aumentare della potenza di calcolo, mantenendo lo stesso carico di lavoro, i tempi di risposta dell'algoritmo diminuiscano. Aumentare la potenza di calcolo in un cluster Hadoop comporta due operazioni da fare: aumentare il numero di slave e di reduce task da eseguire rispettivamente effettuando operazioni di commissioning/decomissioning dei nodi e modificando i parametri dell'applicativo. Il secondo obiettivo si ramifica in due sotto obiettivi: verificare che SIFT individui gli oggetti nella scena indipendentemente da qualunque trasformazione essi possano subire, e scartare il maggior numero possibile di falsi positivi. La generazione del dataset è stata pianificata per andare incontro a queste esigenze ed è stata effettuata nel seguente modo:
+\begin{enumerate}
+\item Sono stati prelevati dalla rete 150 oggetti (quasi sempre due della stessa tipologia) ad alta risoluzione;
+\item Grazie ad uno script Python scritto ad hoc sono state generate 5000 immagini ad alta definizione dove 4 oggetti vengono posizionati all'interno di uno sfondo (un cielo) in maniera casuale dove a due di essi è stata sottoposta una rotazione che può variare dai 0 a 180 gradi mentre ai rimanenti una ridimensionamento che può variare dal 15\% al 50\%;
+\item Il posizionamento casuale non avviene rispettando che l'oggetto debba essere completamente visibile in scena. Infatti può avvenire che alcuni oggetti si sovrappongano o che una parte esca fuori dalla scena in modo da creare un effetto di "occultamento" e testare anche la capacità di individuazione in ambiente occluso;
+\end{enumerate}
 \subsection{Sistema}
-I test sono stati effettuati su un cluster fornito dal GARR composto da 24 nodi.\\
-Ogni nodo ha le seguenti caratteristiche:\\
-\begin{itemize}
-\item \textbf{Hardware}:\\
-
-\begin{center}
-\begin{tabular}{ | c | c |} 
+I test sono stati effettuati su un cluster fornito dal GARR composto da 24 nodi ognuno con le seguenti caratteristiche:\\
+\begin{tabular}{ | l | l | }
 \hline
-Intel Xeon E3-12xx v2 (Ivy Bridge), 64bit & x8 \\ 
+Hardware & Software \\ \hline
+\begin{tabular}{ l | r } 
+Intel Xeon E3-12xx v2 & x8 \\ 
 \hline
 Ram & 32GB \\ 
 \hline
 Scrittura disco & 3.1 GB/s \\
 \hline
 Lettura & 3.5 GB/s \\ 
-\hline
 \end{tabular}
-\end{center}
-
-\item \textbf{Software}:\\
-
-\begin{center}
-\begin{tabular}{ | c | c |} 
-\hline
+&
+\begin{tabular}{  l | r } 
 Sistema Operativo & 16.04.04 \\ 
 \hline
 Kernel & 4.4.0 \\ 
@@ -278,44 +272,55 @@ Kernel & 4.4.0 \\
 Java & 8 \\
 \hline
 Hadoop & 2.7.3 \\ 
+\end{tabular} \\
 \hline
 \end{tabular}
-\end{center}
-\end{itemize}
-
+\\
+CPU e RAM sono state recuperane con il comando \textit{lshw} mentre kernel e sistema operativo col comando \textit{uname}. Le versioni di Java e di Hadoop sono state recuperate con gli appositi comandi forniti da entrambi i software mentre per i parametri di lettura e scrittura del disco sono stati eseguiti i seguenti comandi unix:
+\begin{lstlisting}
+// scrittura
+sync; dd if=/dev/zero of=tempfile bs=1M count=1024; sync
+// lettura
+dd if=tempfile of=/dev/null bs=1M count=1024
+\end{lstlisting}
 \subsection{Configurazioni}
-Configurazione di Yarn dei test effettuati
-
+La configurazione del cluster è la parte più importante affinchè hadoop utilizzi al meglio le risorse disponibili ed è necessario configurare 3 file:
+\begin{itemize}
+\item hdfs-site.xml;
+\item yarn-site.xml;
+\item mapred-site.xml
+\end{itemize}
+Per quanto riguarda il primo file esso contiene le informazioni necessarie per configurare i parametri dell'HDFS. Si è preferito lasciare la size dei blocchi a 64MB e nessun fattore di replicazione in quanto non vogliamo che si perda del tempo di CPU e di scritture sul disco. Il secondo file è invece il gestore delle risorse delle risorse dove allocare RAM e CPU. Si è deciso di assegnare su 30 sui 32GB di RAM ai container questo perché è necessario lasciare della memoria al sistema operativo ed essendo non provvisto di interfaccia grafica riteniamo che 2GB siano più che sufficienti. Per quanto riguarda le risorse da destinare ai container si è optato per un totale di 4 container per slave dove ognuno di essi ha da un minimo di 4 ad un massimo di 7GB di RAM disponibile ed un minimo di 2 ad un massimo di 7 core disponibili. L'ultimo file è quello per la configurazione delle risorse dei map-reduce e alla luce dei parametri assegnati a YARN si è deciso di assegnare un limite superiore di 4GB per i map e 7GB per i reduce. Essendo che ogni container alloca un processo Java è necessario settare anche la size necessaria all'heap di java per ogni task e si è giunti alla conclusione che una politica aggressiva di un 80\% della RAM dei map e dei reduce, sia adeguata per fare fronte al problema. Per riassumere ecco le configurazioni utilizzate:
 \begin{center}
+Configurazione di \textit{yarn-site.xml} \\
 \begin{tabular}{ | c | c |} 
 \hline
-yarn.nodemanager.resource.memory-mb & 32768 \\ 
+yarn.nodemanager.resource.memory-mb & 30720 \\ 
 \hline
 yarn.nodemanager.resource.cpu-vcores & 8 \\ 
 \hline
-yarn.scheduler.minimum-allocation-vcores & 1 \\
+yarn.scheduler.minimum-allocation-vcores & 2 \\
 \hline
-yarn.scheduler.maximum-allocation-vcores & 2 \\ 
+yarn.scheduler.maximum-allocation-vcores & 4 \\ 
 \hline
-yarn.scheduler.minimum-allocation-mb & 2048 \\
+yarn.scheduler.minimum-allocation-mb & 4096 \\
 \hline
 yarn.scheduler.maximum-allocation-mb & 7168 \\
 \hline
 \end{tabular}
 \end{center}
 
-Configurazione di Mapred
-
 \begin{center}
+Configurazione di \textit{mapred-site.xml}\\
 \begin{tabular}{ | c | c |} 
 \hline
 mapreduce.map.memory.mb & 4096 \\ 
 \hline
-mapreduce.reduce.memory.mb & 4096 \\ 
+mapreduce.reduce.memory.mb & 7168 \\ 
 \hline
 mapreduce.map.java.opts & -Xmx3276M \\
 \hline
-mapreduce.reduce.java.opts & -Xmx3276M \\ 
+mapreduce.reduce.java.opts & -Xmx5734M \\ 
 \hline
 mapreduce.map.cpu.vcores & 2 \\
 \hline
@@ -324,6 +329,13 @@ mapreduce.reduce.cpu.vcores & 2 \\
 \end{tabular}
 \end{center}
 
-\subsection{Test 24 nodi}
-
-Test 24 nodi con 96 reduce
+\begin{center}
+Configurazione di \textit{hdfs-site.xml}\\
+\begin{tabular}{ | c | c |} 
+\hline
+dfs.replication & 1 \\ 
+\hline
+dfs.blocksize & 64m \\ 
+\hline
+\end{tabular}
+\end{center}
