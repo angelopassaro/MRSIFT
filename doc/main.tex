@@ -15,6 +15,7 @@
     Ci troviamo in una situazione storica, per quanto riguarda il mondo dell'informatica, dove enormi quantità di dati (nell'ordine dei terabyte o addirittura dei petabyte e in un  futuro non molto lontano di zettabyte) vengono processati. Questi dati devono subire analisi e trasformazioni in modo da poter essere utilizzati in settori che non riguardano solamente il mondo informatico: ambienti scientifici come l'ingegneria, la biologia, e la medicina sono i maggiori consumatori di queste informazioni e hanno bisogno di risolvere i loro "problemi" in modo semplice e il più velocemente possibile. Proprio per questo il calcolo parallelo in ambiente shared memory non è più grado di poter gestire e sostenere queste enormi moli di dati in input senza sorpassare con facilità i limiti di tempo (CPU) e di spazio (Ram e Disco) per poter rispettivamente calcolare i risultati e memorizzarli. La nascita del paradigma Map Reduce ideato da Google e del suo file system (GFS), reso famoso dalla Apache Foundation grazie rispettivamente alle implementazioni di Hadoop e HDFS, ha risolto una grandissima branca di problemi disparati senza dover ricorrere a soluzioni artificiose che tentano di ottimizzare a livelli estremi perdendo di portabilità ma che inoltre necessitano di dover essere continuamente aggiornate per poter andare incontro ai limiti fisici di cui si è parlato prima. L'obiettivo di questa tesi è quindi quello di dimostrare che un approccio distribuito di calcolo, attraverso il modello basato su Grid Computing, permette di "superare" questi limiti in maniera semplice e con risultati accettabili se non migliori che potenzialmente possono scalare con facilità. La tesina si propone di implementare un algoritmo parallelo di Object Detection tramite estrazione di caratteristiche utilizzando l'algoritmo SIFT di Lowe. Il primo capitolo tratterà delle basi su cui si fonda il calcolo distribuito e il Grid Computing, il secondo parlerà di come il framework Hadoop permette di programmare in ambiente distribuito tramite il paradigma Map-Reduce e infine si metteranno in pratica le conoscenze acquisite per implementare l'algoritmo, misurarne prestazioni, la potenziale scalabilità e infine ci saranno le conclusioni finali.
   \end{abstract}
   \tableofcontents
+  \listoffigures
   %Start Thesis
   \chapter{Fondamenti di Calcolo Distribuito}
   \input{./chapters/chapter_1.tex}
@@ -24,5 +25,7 @@
   \input{./chapters/chapter_3.tex}
   \chapter{Utilizzo di Hadoop per Object Detection }
   \input{./chapters/chapter_4.tex}
+  \chapter{Conclusioni}
+  \input{./chapters/chapter_5.tex}
   \input{./chapters/bibliography.tex}
 \end{document}

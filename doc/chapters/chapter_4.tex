@@ -339,12 +339,13 @@ dfs.blocksize & 64m \\
 \hline
 \end{tabular}
 \end{center}
-
 \subsection{Impiego delle risorse}
-
+Una volta lancianti i test, sono stati prelevati i dati delle risorse impiegate dai vari slave, tramite il comando \textit{dstat}, calcolata la media aritmetica e posti su grafico.
+\subsubsection{CPU}
+Per quanto riguarda il consumo delle CPU i grafici riportano le seguenti informazioni: Per ogni test lanciato con diverso numero di slave, risulta che solo 4 di essi utilizzino al pieno la quantità di CPU assegnata. Riteniamo che questo sia dovuto alle dimensioni del dataset non sono adeguate (appena un 1GB) e quindi con la presenza di sovraccarico di comunicazione. Gli stessi valori si presentano sia nel test a 16 slave che in quello a 24 ma questo non implica che la soluzione non scali infatti nei test successivi sulle prestazioni del disco si evince chiaramente come tutti gli slave scrivano in parallelo.
 \begin{figure}
   \begin{center}
-    \includegraphics[scale=0.7]{8slavecpu.jpg}
+    \includegraphics[scale=0.5]{8slavecpu.jpg}
     \caption{L'uso del processore da parte di ogni slave}
     \label{fig:8slavecpu.jpg}
   \end{center}
@@ -352,31 +353,7 @@ dfs.blocksize & 64m \\
 
 \begin{figure}
   \begin{center}
-    \includegraphics[scale=0.8]{8slavedisk.JPG}
-    \caption{Le operazioni sul disco da parte di ogni slave}
-    \label{fig:8slavedisk.jpg}
-  \end{center}
-\end{figure}
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=0.7]{8slavememory.JPG}
-    \caption{Lo stato della memoria di ogni slave}
-    \label{fig:8slavememory.JPG}
-  \end{center}
-\end{figure}
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=0.7]{8slavenet.JPG}
-    \caption{Le operazioni sulla rete compiute da ogni slave}
-    \label{fig:8slavenet.JPG}
-  \end{center}
-\end{figure}
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=0.7]{16slavecpu.jpg}
+    \includegraphics[scale=0.5]{16slavecpu.jpg}
     \caption{L'uso del processore da parte di ogni slave}
     \label{fig:16slavecpu.jpg}
   \end{center}
@@ -384,7 +361,26 @@ dfs.blocksize & 64m \\
 
 \begin{figure}
   \begin{center}
-    \includegraphics[scale=0.7]{16slavedisk.jpg}
+    \includegraphics[scale=0.5]{24slavecpu.jpg}
+    \caption{L'uso del processore da parte di ogni slave}
+    \label{fig:24slavecpu.jpg}
+  \end{center}
+\end{figure}
+
+\subsubsection{Disco}
+Per quanto riguarda l'uso del disco i valori sono quelli previsti: Per ogni test tutti gli slave hanno valori di scrittura alti e bassi in lettura favorendo quindi la località dei dati e scrivendo i match in parallelo.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[scale=0.5]{8slavedisk.JPG}
+    \caption{Le operazioni sul disco da parte di ogni slave}
+    \label{fig:8slavedisk.jpg}
+  \end{center}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[scale=0.5]{16slavedisk.jpg}
     \caption{Le operazioni sul disco da parte di ogni slave}
     \label{fig:16slavedisk.jpg}
   \end{center}
@@ -392,39 +388,18 @@ dfs.blocksize & 64m \\
 
 \begin{figure}
   \begin{center}
-    \includegraphics[scale=0.7]{16slavememory.jpg}
-    \caption{Lo stato della memoria di ogni slave}
-    \label{fig:16slavememory.JPG}
-  \end{center}
-\end{figure}
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=0.7]{16slavenet.jpg}
-    \caption{Le operazioni sulla rete compiute da ogni slave}
-    \label{fig:16slavenet.JPG}
-  \end{center}
-\end{figure}
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=0.8]{24slavecpu.jpg}
-    \caption{L'uso del processore da parte di ogni slave}
-    \label{fig:24slavecpu.jpg}
-  \end{center}
-\end{figure}
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=0.7]{24slavedisk.JPG}
+    \includegraphics[scale=0.5]{24slavedisk.JPG}
     \caption{Le operazioni sul disco da parte di ogni slave}
     \label{fig:24slavedisk.jpg}
   \end{center}
 \end{figure}
 
+\subsubsection{Memoria}
+L'uso della memoria da parte degli slave non è alta e questo è sicuramente dovuto alle dimensioni del dataset esigue. I valori della memoria sono espressi in bytes (si devono dividere per $1024^2$).
+ 
 \begin{figure}
   \begin{center}
-    \includegraphics[scale=0.7]{24slavememory.JPG}
+    \includegraphics[scale=0.5]{8slavememory.JPG}
     \caption{Lo stato della memoria di ogni slave}
     \label{fig:8slavememory.JPG}
   \end{center}
@@ -432,8 +407,82 @@ dfs.blocksize & 64m \\
 
 \begin{figure}
   \begin{center}
-    \includegraphics[scale=0.7]{24slavenet.JPG}
+    \includegraphics[scale=0.5]{16slavememory.jpg}
+    \caption{Lo stato della memoria di ogni slave}
+    \label{fig:16slavememory.JPG}
+  \end{center}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[scale=0.5]{24slavememory.JPG}
+    \caption{Lo stato della memoria di ogni slave}
+    \label{fig:24slavememory.JPG}
+  \end{center}
+\end{figure}
+
+\subsubsection{Rete}
+L'uso della rete in tutti i test è molto elevato e questo è dovuto soprattutto perchè nella fase di reduce bisogna recuperare dall'HDFS tutte le immagini per poter effettuare i match necessari per l'individuazione.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[scale=0.5]{8slavenet.JPG}
     \caption{Le operazioni sulla rete compiute da ogni slave}
     \label{fig:8slavenet.JPG}
   \end{center}
 \end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[scale=0.5]{16slavenet.jpg}
+    \caption{Le operazioni sulla rete compiute da ogni slave}
+    \label{fig:16slavenet.JPG}
+  \end{center}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[scale=0.5]{24slavenet.JPG}
+    \caption{Le operazioni sulla rete compiute da ogni slave}
+    \label{fig:24slavenet.JPG}
+  \end{center}
+\end{figure}
+
+\subsection{Risultati delle API REST}
+Vengono di seguito riportati i risultati delle API fornite dalla dashboard di Hadoop. La pagina permette di visualizzare informazioni. Queste ultime vengono fornite sfruttando i \textbf{Counter} che sono dei veri e propri contatori utili per raccogliere dati e per effettuare del debug basico. Le sezioni che mostra sono informazioni inerenti il file system (locale e distribuito), inerenti ai job, al map reduce e alla fase di shuffle. In tutti i test si notano dei job killed e alcuni failed che sono però "fasulli": nel primo caso alcuni job vengono uccisi a causa della \textbf{Speculative Execution} ovvero Hadoop esegue alcuni task su più slave e quando il primo finisce, causa l'uccisione degli altri in quanto non più necessari. Nel secondo caso i job non falliscono ma il counter viene incrementato in quanto la memoria assegnata al task occupava tutta quella fisica dello slave senza eccedere e il framework è configurato per segnalare questo problema.
+
+\begin{figure}
+  \includegraphics[scale=0.7]{8Slaves.jpg}
+  \caption{Counter 8 Slave}
+  \label{fg:8Slaves.jpg}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=0.7]{16Slaves.jpg}
+  \caption{Counter 16 Slave}
+  \label{fg:16Slaves.jpg}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=0.7]{24Slaves.jpg}
+  \label{fg:24Slaves.jpg}
+  \caption{Counter 24 Slave}
+\end{figure}
+
+\subsection{Output dei Test}
+Sui 750000 match effettuati dall'algoritmo sono state scritte sul disco un totale di 4570 immagini con meno di 10 falsi positivi. L'algoritmo riesce ad individuare le immagini in tutte le possibili trasformazioni supposte e inoltre anche quando l'immagine è parzialmente o totalmente occulta.
+
+\subsection{Riepilogo finale}
+Di seguito sono riportati i tempi presi dalla dashboard di Hadoop e dalla funzione \textit{time}:
+\begin{tabular}{|c|c|c|}
+\hline 
+Slave/Tempo & Time(Elapsed) & Hadoop \\ 
+\hline 
+8 Slave & 13h, 1m, 20s & 13h, 54s \\ 
+\hline 
+16 Slave & 7h, 19m, 42s & 7h, 19m, 17s \\ 
+\hline 
+24 Salve & 5h, 26m, 18s & 5h, 26m, 3s \\ 
+\hline 
+\end{tabular} 
+La tabella mostra chiaramente che i tempi differiscono nell'ordine dei secondi ed è normale perchè è ad Hadoop bisogna aggiungere un delta di tempo necessario per spedire i risultati tramite HTTP alla dashboard.
