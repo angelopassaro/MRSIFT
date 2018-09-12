@@ -9,24 +9,30 @@
 \RequirePackage{color}
 \RequirePackage{ragged2e}
 \RequirePackage[draft]{hyperref}
+\RequirePackage{float}
 %Custom Settings
 \graphicspath{ {images/} }
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
-\lstset{frame=tb,
-  language=Java,
+\lstset{
   aboveskip=3mm,
+  backgroundcolor=\color{white},
+  basicstyle=\small,
   belowskip=3mm,
-  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=false,
   columns=flexible,
-  basicstyle=\small\ttfamily,
+  commentstyle=\color{dkgreen},
+  extendedchars=true
+  frame=tb,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  language=Java,
+  showstringspaces=false,
+  showtabs=false
   numbers=none,
   numberstyle=\tiny\color{gray},
-  keywordstyle=\color{blue},
-  commentstyle=\color{dkgreen},
   stringstyle=\color{mauve},
-  breaklines=true,
-  breakatwhitespace=true,
   tabsize=2
 }
